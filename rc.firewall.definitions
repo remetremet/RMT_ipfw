@@ -1,0 +1,351 @@
+#!/bin/sh
+
+# definitions
+IPFW_unprivports="1024-65535"
+IPFW_privports="1-1023"
+IPFW_logamount="logamount 0"
+IPFW_deny="deny"
+IPFW_denylog="deny log ${IPFW_logamount}"
+IPFW_allow="allow"
+IPFW_allowlog="allow log ${IPFW_logamount}"
+IPFW_keep="keep-state"
+IPFW_keepsetup="keep-state setup"
+
+
+
+# block_ports <type> <port_list>
+# type = "in4","in6","in4l","in6l","out4","out6","out4l","out6l"
+block_dstports (){
+ local cmd=""
+ local cmd2=""
+ case $1 in
+ in4)
+        cmd="${fwcmd} add ${IPFW_deny} ip4 from any to any"
+ ;;
+ in6)
+        cmd="${fwcmd} add ${IPFW_deny} ip6 from any to any"
+ ;;
+ in4log)
+        cmd="${fwcmd} add ${IPFW_denylog} ip4 from any to any"
+ ;;
+ in6log)
+        cmd="${fwcmd} add ${IPFW_denylog} ip6 from any to any"
+ ;;
+ out4)
+        cmd="${fwcmd} add ${IPFW_deny} ip4 from any to any"
+ ;;
+ out6)
+        cmd="${fwcmd} add ${IPFW_deny} ip6 from any to any"
+ ;;
+ out4log)
+        cmd="${fwcmd} add ${IPFW_denylog} ip4 from any to any"
+ ;;
+ out6log)
+        cmd="${fwcmd} add ${IPFW_denylog} ip6 from any to any"
+ ;;
+ *)
+        echo "Unknown block_ports type."
+ ;;
+ esac
+ if [ -n "${cmd}" ]; then
+  for ports in $(array_groupby "$2" "16"); do
+   if [ -n "${ports}" ]; then
+    ${cmd} ${ports}
+    if [ -n "${cmd2}" ]; then
+     ${cmd2} ${ports} to any
+    fi
+   fi
+  done
+ fi
+}
+
+
+# block_srchost <host_table>
+block_srchost (){
+ local host="table(${1})"
+ ${fwcmd} add ${IPFW_denylog} all from ${host} to any not 53,123
+}
+
+
+# block_dsthost <host_table>
+block_dsthost (){
+ local host="table(${1})"
+ ${fwcmd} add ${IPFW_deny} all from any to ${host}
+}
+
+
+# port_allow <tcp/udp> <in/out> <ports>
+port_allow (){
+ for ports in $(array_groupby "$3" "16"); do
+  if [ -n "${ports}" ]; then
+   if [ "$2" = "in" ]; then
+    ${fwcmd} add ${IPFW_allow} $1 from any ${ports} to any
+   fi
+   if [ "$2" = "out" ]; then
+    ${fwcmd} add ${IPFW_allow} $1 from any to any ${ports}
+   fi
+  fi
+ done
+}
+
+
+# block_protocol <ipv6/ipv4> <in/outreply> <port_list> <TCP/UDP/ALL> <loging> <ip> <allow/deny/nodeny/denyonly>
+block_protocol (){
+ local xudp=""
+ local xtcp=""
+ local xdeny="1"
+ local xallow="${IPFW_allow}"
+ local k=""
+ local ks=""
+ local any="any"
+ local nany="any"
+ local xportlist=""
+ if [ "$1" = "ipv6" ]; then
+  local localtable="table(LOCAL_RANGES6)"
+  local outtable="table(OUT_RANGES6)"
+ else
+  local localtable="table(LOCAL_RANGES)"
+  local outtable="table(OUT_RANGES)"
+ fi
+ if [ -n "$3" ]; then
+  xportlist="${3}"
+ fi
+ if [ "$5" = "1" ]; then
+  xallow="${IPFW_allowlog}"
+ fi
+ if [ "$4" = "TCP" ]; then
+  xtcp="1"
+ fi
+ if [ "$4" = "UDP" ]; then
+  xudp="1"
+ fi
+ if [ "$4" = "ALL" ]; then
+  xtcp="1"
+  xudp="1"
+ fi
+ if [ "$2" = "in" ] || [ "$2" = "outreply" ]; then
+  if [ "$6" != "any" ]; then
+   if [ "$6" = "NONE" ]; then
+    xportlist=""
+   fi
+   any="table(${6})"
+   nany="not table(${6})"
+  fi
+ fi
+ if [ "$7" = "deny" ] || [ "$7" = "denyonly" ]; then
+  xtcp=""
+  xudp=""
+ fi
+ if [ "$7" = "nodeny" ]; then
+  if [ "${nany}" != "any" ]; then
+   xdeny=""
+  fi
+ fi
+ if [ "${nany}" = "any" ] && [ "$7" = "denyonly" ]; then
+  xdeny=""
+ fi
+ if [ ${IPFW_statefull} = "1" ]; then
+  k="${IPFW_keep}"
+  ks="${IPFW_keepsetup}"
+ fi
+ for xport in ${xportlist}; do
+  if [ "${xtcp}" = "1" ]; then
+   if [ "$2" = "in" ]; then
+    ${fwcmd} add ${xallow} tcp from ${any} ${IPFW_unprivports} to ${outtable} ${xport} ${ks}
+   fi
+   if [ "$2" = "outreply" ]; then
+    ${fwcmd} add ${xallow} tcp from ${outtable} ${xport} to ${any} ${IPFW_unprivports} ${ks}
+   fi
+  fi
+  if [ "${xudp}" = "1" ]; then
+   if [ "$2" = "in" ]; then
+    ${fwcmd} add ${xallow} udp from ${any} ${IPFW_unprivports} to ${outtable} ${xport} ${k}
+   fi
+   if [ "$2" = "outreply" ]; then
+    ${fwcmd} add ${xallow} udp from ${outtable} ${xport} to ${any} ${IPFW_unprivports} ${k}
+   fi
+  fi
+  if [ "${xdeny}" = "1" ]; then
+   if [ "$2" = "in" ]; then
+    ${fwcmd} add ${IPFW_denylog} $1 from ${nany} to ${outtable} ${xport}
+   fi
+   if [ "$2" = "outreply" ]; then
+    ${fwcmd} add ${IPFW_denylog} $1 from ${outtable} ${xport} to ${nany}
+   fi
+  fi
+ done
+}
+
+
+# define_multiwan <type> <port/host> <multiwan_model>
+# type = "port","srchost","dsthost"
+define_multiwan (){
+ local wan=""
+ local cmd1=""
+ local cmd2=""
+ case $1 in
+ port)
+        cmd1="all from"
+        wan="any"
+	cmd2="to any $2"
+ ;;
+ protocol)
+        cmd1="$2 from"
+        wan="any"
+        cmd2="to any"
+ ;;
+ srchost)
+        cmd1="all from"
+        wan="table(${2})"
+	cmd2="to any"
+ ;;
+ dsthost)
+        cmd1="all from"
+        wan="any"
+	cmd2="to table(${2})"
+ ;;
+ *)
+        echo "Unknown define_multiwan type."
+ ;;
+ esac
+ if [ -n "${cmd1}" ]; then
+  case ${3} in
+  012)
+	${fwcmd} add set 0 setfib 0 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+	${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+	${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+	${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+        ;;
+  021)
+        ${fwcmd} add set 0 setfib 0 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+        ${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+        ${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+        ${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+        ;;
+  120)
+	${fwcmd} add set 0 setfib 1 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+	${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+	${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+        ${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+        ;;
+  102)
+	${fwcmd} add set 0 setfib 1 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+	${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+        ${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+	${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+        ;;
+  210)
+	${fwcmd} add set 0 setfib 2 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+        ${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+        ${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+	${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+        ;;
+  201)
+	${fwcmd} add set 0 setfib 2 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+        ${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+	${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+	${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+        ;;
+  *)
+        echo "Unknown define_multiwan model."
+        ;;
+  esac
+ fi
+}
+
+
+# prepare_shaping   ### no params ###
+prepare_shaping (){
+ ${fwcmd} pipe 10 config bw 1000kbps     # inbound
+# ${fwcmd} pipe 11 config bw 1000kbps     # outbound
+# ${fwcmd} pipe 20 config bw 5000kbps
+# ${fwcmd} pipe 21 config bw 5000kbps
+# ${fwcmd} pipe 30 config bw 10000kbps
+# ${fwcmd} pipe 31 config bw 10000kbps
+# ${fwcmd} pipe 40 config bw 20000kbps
+# ${fwcmd} pipe 41 config bw 20000kbps
+# ${fwcmd} pipe 50 config bw 100Mbps
+# ${fwcmd} pipe 51 config bw 100Mbps
+# ${fwcmd} pipe 60 config bw 1000Mbps
+# ${fwcmd} pipe 61 config bw 1000Mbps
+}
+
+
+# prepare_tables   ### no params ###
+prepare_tables (){
+ ${fwcmd} -q table BLACKLIST create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLACKLIST flush
+ tail -n +2 /etc/rc.firewall.blacklist | xargs ipfw -q table BLACKLIST add
+
+ ${fwcmd} -q table BLACKLIST6 create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLACKLIST6 flush
+ tail -n +2 /etc/rc.firewall.blacklist6 | xargs ipfw -q table BLACKLIST6 add
+
+ ${fwcmd} -q table BLACKLIST_RMT create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLACKLIST_RMT flush
+ tail -n +2 /etc/rc.firewall.blacklist_rmt | xargs ipfw -q table BLACKLIST_RMT add
+
+ ${fwcmd} -q table BLACKLIST_RMT6 create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLACKLIST_RMT6 flush
+ tail -n +2 /etc/rc.firewall.blacklist_rmt6 | xargs ipfw -q table BLACKLIST_RMT6 add
+
+ ${fwcmd} -q table BLACKLIST_IMP create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLACKLIST_IMP flush
+ tail -n +2 /etc/rc.firewall.blacklist_imp | xargs ipfw -q table BLACKLIST_IMP add
+
+ ${fwcmd} -q table BLACKLIST_IMP6 create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLACKLIST_IMP6 flush
+ tail -n +2 /etc/rc.firewall.blacklist_imp6 | xargs ipfw -q table BLACKLIST_IMP6 add
+}
+
+
+# array_length "${array}"
+# (a b c d e f g) -> 7
+array_length() {
+ local output
+ output=`echo "$1" | wc -w`
+ output=`expr ${output} + 0`
+ echo "${output}"
+}
+
+
+# array_get "${array}" "${index}"
+# (a b c d e f g) -> c
+array_get() {
+ local output=""
+ local i=0
+ for ix in $1; do
+  if [ "$2" = "${i}" ]; then
+   output=${ix}
+  fi
+  i=`expr ${i} + 1`
+ done
+ output=$(echo "${output}" | sed "s/_/ /g")
+ echo "${output}"
+}
+
+
+# array_groupby "${array}" "<max. number of fields on line>"
+# (a b c d e f g) -> (a,b,c) (d,e,f) (g)
+array_groupby() {
+ local output=""
+ local i=0
+ local part=""
+ local max=$2
+ max=`expr ${max} - 1`
+ for port in $1; do
+  part="${part},${port}"
+  if [ "${i}" == "${max}" ]; then
+   o=$(echo "${part}" | cut -c 2- )
+   output="${output} ${o}"
+   part=""
+   i=0
+  fi
+  i=`expr ${i} + 1`
+ done
+ if [ -n "${part}" ]; then
+  o=$(echo "${part}" | cut -c 2- )
+  output="${output} ${o}"
+ fi
+ echo "${output}"
+}
