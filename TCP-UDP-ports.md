@@ -3,9 +3,9 @@ Most common TCP and UDP ports used
 
 |Port|Service|Port|Service|
 |---:|:---:|---:|:---:|
-TCP 20|FTP data|TCP 990|FTPS
-TCP 21|FTP|TCP 993|IMAPS
-TCP 22|SSH|TCP 995|POP3S
+TCP 20|FTP data
+TCP 21|FTP
+TCP 22|SSH
 TCP 23|Telnet
 TCP 25|SMTP
 UDP 53|DNS
@@ -46,3 +46,6 @@ TCP 636|LDAPS
 UDP 853|DNS
 TCP 873|Rsync
 UDP 953|DNS
+TCP 990|FTPS
+TCP 993|IMAPS
+TCP 995|POP3S
