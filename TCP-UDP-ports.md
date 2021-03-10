@@ -3,8 +3,8 @@ Most common TCP and UDP ports used
 
 |Protocol|Port|Service|Protocol|Port|Service|Protocol|Port|Service|
 |:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|
-TCP,UDP|19|Chargen/Trojans
-TCP,UDP,SCTP|20|FTP data
+TCP,UDP|19|Character generator|TCP,UDP|194|IRC|TCP,UDP|781-783|HP iLO
+TCP,UDP,SCTP|20|FTP data|TCP,UDP|201-208|Appletalk|UDP|853|DNS/TLS
 TCP|21|FTP
 TCP|22|SSH
 TCP|23|Telnet
@@ -32,8 +32,7 @@ TCP|143|IMAP
 TCP|161|SNMP
 TCP|162|SNMP Trap
 TCP,UDP,SCTP|179|BGP
-TCP,UDP|194|IRC
-TCP,UDP|201-208|Appletalk
+
 TCP|389|LDAP
 TCP,UDP|427|SLP
 TCP,UDP|443|HTTPS
@@ -61,8 +60,7 @@ TCP,UDP|689|NMAP
 UDP|694|HA-cluster
 TCP,UDP|703|FortiGate
 TCP,UDP|730|FortiGate
-TCP,UDP|781-783|HP iLO
-UDP|853|DNS/TLS
+
 TCP,UDP|860|iSCSI
 TCP,UDP|861|OWAMP
 TCP,UDP|862|TWAMP
