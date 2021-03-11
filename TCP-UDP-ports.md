@@ -126,6 +126,11 @@ TCP|7000-7006|AFS
 TCP|7070|AnyDesk, RealAudio, RTSP
 TCP|7210|SAP MaxDB
 UDP|7351|Meraki
+UDP|7423|ReadyShare
+TCP|7631|Tesla Messaging
+TCP|8000|HTTP Alternative
+TCP|8010|FortiGate
+TCP|8013-8014|FortiGate
 TCP|8080|HTTP Alternative
 TCP|8086|InfluxDB
 TCP|8291-8292|Mikrotik WinBox
