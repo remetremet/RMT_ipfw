@@ -1,6 +1,7 @@
-Most common TCP and UDP ports used
+Common TCP and UDP ports
 ===
-
+Known ports (0-1023)
+---
 |Protocol|Port|Service|Protocol|Port|Service|Protocol|Port|Service|
 |:---|:---:|:---|:---|:---:|:---|:---|:---:|:---|
 TCP,UDP|19|Character generator|TCP|161|SNMP|TCP,UDP|635|NFS
@@ -24,12 +25,17 @@ TCP,UDP|111|RPC|TCP|521|IRC|TCP|990|FTPS
 TCP,UDP|113|IDENT|TCP,UDP|546|DHCPv6|TCP|993|IMAPS
 UDP|119|NNTP|TCP,UDP|547|DHCPv6|TCP,UDP|994|IRCS
 UDP|123|NTP|TCP|548|AFS|TCP|995|POP3S
-TCP,UDP|135|RPC|TCP,UDP|554|RTSP|TCP|1024|kdm
+TCP,UDP|135|RPC|TCP,UDP|554|RTSP|
 TCP,UDP|137|Netbios|TCP,UDP|563|NNTPS|
 TCP,UDP|138|Netbios|TCP|587|SMTP/STARTTLS|
 TCP,UDP|139|Netbios/SMB|TCP,UDP|623|IPMI/BMC|
 TCP|143|IMAP|TCP,UDP|631|IPP|
 
+Known ports (1024-65535)
+---
+|Protocol|Port|Service|Protocol|Port|Service|Protocol|Port|Service|
+|:---|:---:|:---|:---|:---:|:---|:---|:---:|:---|
+TCP|1024|kdm
 UDP,SCTP|1167|Cisco IP SLA
 TCP|1194|OpenVPN
 TCP|1433|MS SQL
