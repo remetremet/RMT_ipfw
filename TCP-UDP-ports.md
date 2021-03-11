@@ -2,7 +2,7 @@ Most common TCP and UDP ports used
 ===
 
 |Protocol|Port|Service|Protocol|Port|Service|Protocol|Port|Service|
-|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|
+|:---|:---:|:---|:---|:---:|:---|:---|:---:|:---|
 TCP,UDP|19|Character generator|TCP|161|SNMP|TCP,UDP|635|NFS
 TCP,UDP,SCTP|20|FTP data|TCP|162|SNMP Trap|TCP|636|LDAPS
 TCP|21|FTP|TCP,UDP,SCTP|179|BGP|TCP,UDP|689|NMAP
