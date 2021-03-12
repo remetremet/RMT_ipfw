@@ -131,12 +131,36 @@ TCP|7631|Tesla Messaging
 TCP|8000|HTTP Alternative
 TCP|8010|FortiGate
 TCP|8013-8014|FortiGate
-TCP|8080|HTTP Alternative
+TCP|8080-8081|HTTP Alternative
 TCP|8086|InfluxDB
 TCP|8291-8292|Mikrotik WinBox
 TCP|8333|Bitcoin
 TCP|8443|HTTPS alternative
+TCP|8543|Ubiquiti Cloud
+TCP|8544|JSON-RPC
+TCP|8728-8729|Mikrotik API
+TCP|8843|Ubiquiti Cloud
+TCP|8866|NextPVR
+TCP|8880|Ubiquiti Cloud
 TCP|8883|MQTT
+TCP|8889|Splunk
+TCP|8899|Qnap
+TCP|8953|Unbound
+TCP|9030|Tor
+TCP|9050-9051|Tor
 TCP|9100|Printer
+TCP|9150|Tor
+TCP|9200|Elasticsearch
+TCP|9300|Elasticsearch
+TCP|9324|Google Assistant
+TCP|9332-9333|Litecoin
+TCP,UDP|9418|Git
+TCP|9582|FortiGuard
+UDP|9987|Teamspeak
+TCP|9997-9998|Splunk
 TCP|10001|Ubiquiti Discovery
 TCP|10050-10052|Zabbix
+TCP,UDP|11000|Cisco BGP
+TCP,UDP|11112|DICOM
+TCP|11143|UniFi
+
