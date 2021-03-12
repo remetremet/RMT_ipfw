@@ -87,4 +87,19 @@ Known ports (16384-65535)
 |Protocol|Port|Service|Protocol|Port|Service|Protocol|Port|Service|
 |:---|:---:|:---|:---|:---:|:---|:---|:---:|:---|
 UDP|16384-16403|iChat
+TCP|17440-17444|VMware
+TCP|17472|VMware
+TCP|17477|VMware
+TCP|17500|Dropbox
+UDP|17771|Hamachi
+TCP|17777-17779|SolarWinds
+TCP|17790-17791|SolarWinds
+TCP|17988|HP iLO
+TCP,UDP|18231-18234|CheckPoint
+TCP|18242-18243|CheckPoint
+TCP|18264|CheckPoint
+TCP|18332|Bitcoin
+TCP|18443-18444|Siemens Gigaset
+
+
 
