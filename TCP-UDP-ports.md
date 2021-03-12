@@ -69,8 +69,8 @@ Known ports (1024-16383)
 3478-3497/UDP|Apple FaceTime|3493/TCP|NUT
 3998/TCP,UDP|Nagios|3544/TCP,UDP|Teredo
 4021/TCP|Envisalink|4025/TCP|Envisalink
-4070/TCP,UDP|Amazon Echo|
-4242-4243/TCP,UDP|CrashPlan|4244/TCP|Viber
+4070/TCP,UDP|Amazon Echo|4242/TCP,UDP|CrashPlan
+4243/TCP,UDP|CrashPlan|4244/TCP|Viber
 4369/TCP|RabbitMQ, SolarWinds|4500/UDP|IPsec
 4713/TCP|PulseAudio|4786/TCP|Cisco Smart Install
 4949/TCP|Munin|5000/TCP|SSDP/UPnP
