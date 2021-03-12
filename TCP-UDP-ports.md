@@ -37,7 +37,7 @@ Known ports (1024-16383)
 |Protocol|Port|Service|Protocol|Port|Service|Protocol|Port|Service|
 |:---|:---:|:---|:---|:---:|:---|:---|:---:|:---|
 TCP|1024|kdm|TCP,UDP|TCP,UDP|4242-4243|CrashPlan|TCP|7000-7006|AFS
-UDP,SCTP|1167|Cisco IP SLA|4244|Viber|TCP|7070|AnyDesk, RealAudio, RTSP
+UDP,SCTP|1167|Cisco IP SLA|TCP|4244|Viber|TCP|7070|AnyDesk, RealAudio, RTSP
 TCP|1194|OpenVPN|TCP|4369|RabbitMQ, SolarWinds|TCP|7210|SAP MaxDB
 TCP|1433|MS SQL|UDP|4500|IPsec|UDP|7351|Meraki
 TCP,UDP|1434|MS SQL|TCP|4713|PulseAudio|UDP|7423|ReadyShare
