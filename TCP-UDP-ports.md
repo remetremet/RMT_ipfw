@@ -3,7 +3,7 @@ Common TCP and UDP ports
 Known ports (0-1023)
 ---
 |Port/Protocol|Service|Port/Protocol|Service
-|:---:|:---|:---:|:---|
+|---:|:---|---:|:---|
 19/TCP 19/UDP|Char generator|20/TCP 20/UDP 20/SCTP|FTP data
 21/TCP|FTP|22/TCP|SSH
 23/TCP|Telnet|25/TCP|SMTP
@@ -45,8 +45,8 @@ Known ports (0-1023)
 
 Known ports (1024-16383)
 ---
-|Protocol|Port|Service|Protocol|Port|Service|Protocol|Port|Service|
-|:---|:---:|:---|:---|:---:|:---|:---|:---:|:---|
+|Port/Protocol|Service|Port/Protocol|Service
+|---:|:---|---:|:---|
 TCP|1024|kdm|TCP,UDP|TCP,UDP|4242-4243|CrashPlan|TCP|7000-7006|AFS
 UDP,SCTP|1167|Cisco IP SLA|TCP|4244|Viber|TCP|7070|AnyDesk, RealAudio, RTSP
 TCP|1194|OpenVPN|TCP|4369|RabbitMQ, SolarWinds|TCP|7210|SAP MaxDB
@@ -96,22 +96,13 @@ TCP,UDP|4070|Amazon Echo|TCP|6882-6900|BitTorrent|
 
 Known ports (16384-65535)
 ---
-|Protocol|Port|Service|Protocol|Port|Service|Protocol|Port|Service|
-|:---|:---:|:---|:---|:---:|:---|:---|:---:|:---|
-UDP|16384-16403|iChat
-TCP|17440-17444|VMware
-TCP|17472|VMware
-TCP|17477|VMware
-TCP|17500|Dropbox
-UDP|17771|Hamachi
-TCP|17777-17779|SolarWinds
-TCP|17790-17791|SolarWinds
-TCP|17988|HP iLO
-TCP,UDP|18231-18234|CheckPoint
-TCP|18242-18243|CheckPoint
-TCP|18264|CheckPoint
-TCP|18332|Bitcoin
-TCP|18443-18444|Siemens Gigaset
-
-
+|Port/Protocol|Service|Port/Protocol|Service
+|---:|:---|---:|:---|
+16384-16403/UDP|iChat|17440-17444/TCP|VMware
+17472/TCP|VMware|17477/TCP|VMware
+17500/TCP|Dropbox|17771/UDP|Hamachi
+17777-17779/TCP|SolarWinds|17790-17791/TCP|SolarWinds
+17988/TCP|HP iLO|18231-18234/TCP 18231-18234/UDP|CheckPoint
+18242-18243/TCP|CheckPoint|18264/TCP|CheckPoint
+18332/TCP|Bitcoin|18443-18444/TCP|Siemens Gigaset
 
