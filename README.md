@@ -13,6 +13,7 @@ Requirements
 ---
 - `bash`
 - FreeBSD IPFW2
+- FreeBSD 11.0+
 
 
 ![license-image](https://img.shields.io/github/license/remetremet/RMT_ipfw?style=plastic)
