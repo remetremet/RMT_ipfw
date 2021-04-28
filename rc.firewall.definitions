@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/lcoal/bin/bash
 
 # definitions
 IPFW_unprivports="1024-65535"
@@ -187,7 +187,7 @@ define_multiwan (){
  port)
         cmd1="all from"
         wan="any"
-	cmd2="to any $2"
+        cmd2="to any $2"
  ;;
  protocol)
         cmd1="$2 from"
@@ -197,12 +197,12 @@ define_multiwan (){
  srchost)
         cmd1="all from"
         wan="table(${2})"
-	cmd2="to any"
+        cmd2="to any"
  ;;
  dsthost)
         cmd1="all from"
         wan="any"
-	cmd2="to table(${2})"
+        cmd2="to table(${2})"
  ;;
  *)
         echo "Unknown define_multiwan type."
@@ -211,10 +211,10 @@ define_multiwan (){
  if [ -n "${cmd1}" ]; then
   case ${3} in
   012)
-	${fwcmd} add set 0 setfib 0 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-	${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-	${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-	${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+        ${fwcmd} add set 0 setfib 0 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+        ${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+        ${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+        ${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
         ;;
   021)
         ${fwcmd} add set 0 setfib 0 ${cmd1} ${wan} ${cmd2}        # All WANs ok
@@ -223,28 +223,28 @@ define_multiwan (){
         ${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
         ;;
   120)
-	${fwcmd} add set 0 setfib 1 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-	${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-	${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+        ${fwcmd} add set 0 setfib 1 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+        ${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+        ${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
         ${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
         ;;
   102)
-	${fwcmd} add set 0 setfib 1 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-	${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+        ${fwcmd} add set 0 setfib 1 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+        ${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
         ${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-	${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
+        ${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
         ;;
   210)
-	${fwcmd} add set 0 setfib 2 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+        ${fwcmd} add set 0 setfib 2 ${cmd1} ${wan} ${cmd2}        # All WANs ok
         ${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
         ${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-	${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+        ${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
         ;;
   201)
-	${fwcmd} add set 0 setfib 2 ${cmd1} ${wan} ${cmd2}        # All WANs ok
+        ${fwcmd} add set 0 setfib 2 ${cmd1} ${wan} ${cmd2}        # All WANs ok
         ${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
-	${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-	${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
+        ${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
+        ${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
         ;;
   *)
         echo "Unknown define_multiwan model."
@@ -349,3 +349,5 @@ array_groupby() {
  fi
  echo "${output}"
 }
+
+
