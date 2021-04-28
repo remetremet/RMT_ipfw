@@ -78,10 +78,10 @@ block_dsthost (){
 port_allow (){
  for ports in $(array_groupby "$3" "16"); do
   if [ -n "${ports}" ]; then
-   if [ "$2" = "in" ]; then
+   if [ x"$2" == x"in" ]; then
     ${fwcmd} add ${IPFW_allow} $1 from any ${ports} to any
    fi
-   if [ "$2" = "out" ]; then
+   if [ x"$2" == x"out" ]; then
     ${fwcmd} add ${IPFW_allow} $1 from any to any ${ports}
    fi
   fi
@@ -110,66 +110,66 @@ block_protocol (){
  if [ -n "$3" ]; then
   xportlist="${3}"
  fi
- if [ "$5" = "1" ]; then
+ if [ x"$5" == x"1" ]; then
   xallow="${IPFW_allowlog}"
  fi
- if [ "$4" = "TCP" ]; then
+ if [ x"$4" == x"TCP" ]; then
   xtcp="1"
  fi
- if [ "$4" = "UDP" ]; then
+ if [ x"$4" == x"UDP" ]; then
   xudp="1"
  fi
- if [ "$4" = "ALL" ]; then
+ if [ x"$4" == x"ALL" ]; then
   xtcp="1"
   xudp="1"
  fi
- if [ "$2" = "in" ] || [ "$2" = "outreply" ]; then
-  if [ "$6" != "any" ]; then
-   if [ "$6" = "NONE" ]; then
+ if [ x"$2" == x"in" ] || [ x"$2" == x"outreply" ]; then
+  if [ x"$6" != x"any" ]; then
+   if [ x"$6" == x"NONE" ]; then
     xportlist=""
    fi
    any="table(${6})"
    nany="not table(${6})"
   fi
  fi
- if [ "$7" = "deny" ] || [ "$7" = "denyonly" ]; then
+ if [ x"$7" == x"deny" ] || [ x"$7" == x"denyonly" ]; then
   xtcp=""
   xudp=""
  fi
- if [ "$7" = "nodeny" ]; then
-  if [ "${nany}" != "any" ]; then
+ if [ x"$7" == x"nodeny" ]; then
+  if [ x"${nany}" != x"any" ]; then
    xdeny=""
   fi
  fi
- if [ "${nany}" = "any" ] && [ "$7" = "denyonly" ]; then
+ if [ x"${nany}" == x"any" ] && [ x"$7" == x"denyonly" ]; then
   xdeny=""
  fi
- if [ ${IPFW_statefull} = "1" ]; then
+ if [ x"${IPFW_statefull}" == x"1" ]; then
   k="${IPFW_keep}"
   ks="${IPFW_keepsetup}"
  fi
  for xport in ${xportlist}; do
-  if [ "${xtcp}" = "1" ]; then
-   if [ "$2" = "in" ]; then
+  if [ x"${xtcp}" == x"1" ]; then
+   if [ x"$2" == x"in" ]; then
     ${fwcmd} add ${xallow} tcp from ${any} ${IPFW_unprivports} to ${outtable} ${xport} ${ks}
    fi
-   if [ "$2" = "outreply" ]; then
+   if [ x"$2" == x"outreply" ]; then
     ${fwcmd} add ${xallow} tcp from ${outtable} ${xport} to ${any} ${IPFW_unprivports} ${ks}
    fi
   fi
-  if [ "${xudp}" = "1" ]; then
-   if [ "$2" = "in" ]; then
+  if [ x"${xudp}" == x"1" ]; then
+   if [ x"$2" == x"in" ]; then
     ${fwcmd} add ${xallow} udp from ${any} ${IPFW_unprivports} to ${outtable} ${xport} ${k}
    fi
-   if [ "$2" = "outreply" ]; then
+   if [ x"$2" == x"outreply" ]; then
     ${fwcmd} add ${xallow} udp from ${outtable} ${xport} to ${any} ${IPFW_unprivports} ${k}
    fi
   fi
-  if [ "${xdeny}" = "1" ]; then
-   if [ "$2" = "in" ]; then
+  if [ x"${xdeny}" == x"1" ]; then
+   if [ x"$2" == x"in" ]; then
     ${fwcmd} add ${IPFW_denylog} $1 from ${nany} to ${outtable} ${xport}
    fi
-   if [ "$2" = "outreply" ]; then
+   if [ x"$2" == x"outreply" ]; then
     ${fwcmd} add ${IPFW_denylog} $1 from ${outtable} ${xport} to ${nany}
    fi
   fi
@@ -304,7 +304,7 @@ prepare_tables (){
 array_length() {
  local output
  output=`echo "$1" | wc -w`
- output=`expr ${output} + 0`
+ output=$(( ${output} + 0 ))
  echo "${output}"
 }
 
@@ -315,10 +315,10 @@ array_get() {
  local output=""
  local i=0
  for ix in $1; do
-  if [ "$2" = "${i}" ]; then
+  if [ x"$2" = x"${i}" ]; then
    output=${ix}
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
  output=$(echo "${output}" | sed "s/_/ /g")
  echo "${output}"
@@ -332,16 +332,16 @@ array_groupby() {
  local i=0
  local part=""
  local max=$2
- max=`expr ${max} - 1`
+ max=$(( ${max} - 1 ))
  for port in $1; do
   part="${part},${port}"
-  if [ "${i}" == "${max}" ]; then
+  if [ x"${i}" == x"${max}" ]; then
    o=$(echo "${part}" | cut -c 2- )
    output="${output} ${o}"
    part=""
    i=0
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
  if [ -n "${part}" ]; then
   o=$(echo "${part}" | cut -c 2- )
