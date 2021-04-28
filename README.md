@@ -9,8 +9,8 @@ Automated FreeBSD IPFW2 (up to 10xWAN, up to 10xLAN, dualstack, router, endpoint
 - Failover / Load balancing of multiple WANs
 
 
-# Requirements
-
+Requirements
+---
 - `bash`
 - FreeBSD IPFW2
 
