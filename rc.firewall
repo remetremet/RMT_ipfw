@@ -1,34 +1,4 @@
-#!/bin/sh -
-# Copyright (c) 1996  Poul-Henning Kamp
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-# SUCH DAMAGE.
-#
-# $FreeBSD: releng/12.2/etc/rc.firewall 329817 2018-02-22 08:25:39Z araujo $
-#
-
-#
-# Setup system for ipfw(4) firewall service.
-#
+#!/usr/local/bin/bash
 
 # Suck in the configuration variables.
 if [ -z "${source_rc_confs_defined}" ]; then
@@ -58,24 +28,16 @@ ipv6_available=$?
 ${fwcmd} -f flush
 ${fwcmd} set enable 0
 if [ ${IPFW_multiwan} -eq 1 ]; then
- if [ -n "${IPFW_oip}" ]; then
-  ${fwcmd} set disable 1 # WAN1 is online (enable if dead)
- else
-  ${fwcmd} set enable 1 # WAN1 is offline
- fi
- if [ -n "${IPFW_oip2}" ]; then
-  ${fwcmd} set disable 2 # WAN2 is online (enable if dead)
- else
-  ${fwcmd} set enable 2 # WAN2 is offline
- fi
- if [ -n "${IPFW_oip3}" ]; then
-  ${fwcmd} set disable 3 # WAN3 is online (enable if dead)
- else
-  ${fwcmd} set enable 3 # WAN3 is offline
- fi
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}"
+  if [ -n "${!j}" ]; then
+   ${fwcmd} set disable ${i} # WAN is online (enable if dead)
+  else
+   ${fwcmd} set enable ${i} # WAN is offline
+  fi
+ done
 fi
 prepare_tables
-
 
 ########################
 ########################
@@ -88,457 +50,284 @@ if [ $ipv6_available -eq 0 ]; then
  ${fwcmd} add ${IPFW_denylog} all from ::1/128 to any
 fi
 ### Traffic identification
-${fwcmd} add skipto 100 ip4 from any to any out
-${fwcmd} add skipto 200 ip4 from any to any in
+${fwcmd} add skipto 1000 ip4 from any to any out
+${fwcmd} add skipto 3000 ip4 from any to any in
 if [ $ipv6_available -eq 0 ]; then
- ${fwcmd} add skipto 300 ip6 from any to any out
- ${fwcmd} add skipto 400 ip6 from any to any in
+ ${fwcmd} add skipto 5000 ip6 from any to any out
+ ${fwcmd} add skipto 7000 ip6 from any to any in
 fi
-if [ -n "${IPFW_oip}" ]; then
- if [ -n "${IPFW_nat}" ]; then
-  ${fwcmd} nat 1 config if ${IPFW_oif} ${IPFW_nat_params}
-  ${fwcmd} nat 11 config if ${IPFW_oif} ${IPFW_nat_params}
+for i in "${IPFW_WANS_list}"; do
+ j="IPFW_oip${i}"
+ if [ -n "${!j}" ]; then
+  j="IPFW_nat${i}"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   ${fwcmd} nat ${i} config if ${!k} ${!j}
+  fi
  fi
-fi
-if [ -n "${IPFW_oip2}" ]; then
- if [ -n "${IPFW_nat2}" ]; then
-  ${fwcmd} nat 2 config if ${IPFW_oif2} ${IPFW_nat2_params}
-  ${fwcmd} nat 12 config if ${IPFW_oif2} ${IPFW_nat2_params}
- fi
-fi
-if [ -n "${IPFW_oip3}" ]; then
- if [ -n "${IPFW_nat3}" ]; then
-  ${fwcmd} nat 3 config if ${IPFW_oif3} ${IPFW_nat3_params}
-  ${fwcmd} nat 13 config if ${IPFW_oif3} ${IPFW_nat3_params}
- fi
-fi
-${fwcmd} add 99 skipto 65500 log all from any to any
+done
+${fwcmd} add 999 skipto 65500 log all from any to any
 ########################
 ########################
 # IPv4 Out
-if [ -n "${IPFW_iip}" ]; then
- ${fwcmd} add 100 skipto 5000 ip4 from ${IPFW_iip} to any via ${IPFW_iif} out
- ${fwcmd} add skipto 5000 ip4 from any to ${IPFW_inet} via ${IPFW_iif} out
- ${fwcmd} add skipto 5000 ip4 from any to 255.255.255.255 via ${IPFW_iif} out
-fi
-if [ -n "${IPFW_iip2}" ]; then
- ${fwcmd} add 110 skipto 5100 ip4 from ${IPFW_iip2} to any via ${IPFW_iif2} out
- ${fwcmd} add skipto 5100 ip4 from any to ${IPFW_inet2} via ${IPFW_iif2} out
- ${fwcmd} add skipto 5100 ip4 from any to 255.255.255.255 via ${IPFW_iif2} out
-fi
-if [ -n "${IPFW_iip3}" ]; then
- ${fwcmd} add 120 skipto 5200 ip4 from ${IPFW_iip3} to any via ${IPFW_iif3} out
- ${fwcmd} add skipto 5200 ip4 from any to ${IPFW_inet3} via ${IPFW_iif3} out
- ${fwcmd} add skipto 5200 ip4 from any to 255.255.255.255 via ${IPFW_iif3} out
-fi
-if [ -n "${IPFW_oip}" ]; then
- ${fwcmd} add 130 skipto 15000 ip4 from ${IPFW_oip} to any via ${IPFW_oif} out
- if [ -n "${IPFW_iip}" ]; then
-  ${fwcmd} add skipto 15000 ip4 from ${IPFW_inet} to any via ${IPFW_oif} out
+y=1000
+for i in "${IPFW_LANS_list}"; do
+ j="IPFW_iip${i}"
+ if [ -n "${!j}" ]; then
+  k="IPFW_iif${i}"
+  l="IPFW_inet${i}"
+  x=$(( 20000 + ( ( ${i} - 1 ) * 10 ) ))
+  ${fwcmd} add ${y} skipto ${x} ip4 from ${!j} to any via ${!k} out
+  ${fwcmd} add skipto ${x} ip4 from any to ${!l} via ${!k} out
+  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${!k} out
  fi
- if [ -n "${IPFW_iip2}" ]; then
-  ${fwcmd} add skipto 15000 ip4 from ${IPFW_inet2} to any via ${IPFW_oif} out
+ y=$(( ${y} + 5 )) # 5 rules max.
+done
+y=1100
+for i in "${IPFW_WANS_list}"; do
+ j="IPFW_oip${i}"
+ if [ -n "${!j}" ]; then
+  k="IPFW_oif${i}"
+  x=$(( 45000 + ( ( ${i} - 1 ) * 10 ) ))
+  ${fwcmd} add ${y} skipto ${x} ip4 from ${!j} to any via ${!k} out
+  for ii in "${IPFW_LANS_list}"; do
+   jj="IPFW_iip${ii}"
+   if [ -n "${!jj}" ]; then
+    kk="IPFW_inet${ii}"
+    ${fwcmd} add skipto ${x} ip4 from ${!kk} to any via ${!k} out
+   fi
+  done
+  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${!k} out
  fi
- if [ -n "${IPFW_iip3}" ]; then
-  ${fwcmd} add skipto 15000 ip4 from ${IPFW_inet3} to any via ${IPFW_oif} out
+ y=$(( ${y} + 25 ))
+done
+y=1600
+for i in "${IPFW_LANS_list}"; do
+ j="IPFW_iip${i}"
+ if [ -n "${!j}" ]; then
+  k="IPFW_iif${i}"
+  x=$(( 20000 + ( ( ${i} - 1 ) * 10 ) ))
+  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${!k} out
  fi
- ${fwcmd} add skipto 15000 ip4 from any to 255.255.255.255 via ${IPFW_oif} out
-fi
-if [ -n "${IPFW_oip2}" ]; then
- ${fwcmd} add 140 skipto 15100 ip4 from ${IPFW_oip2} to any via ${IPFW_oif2} out
- if [ -n "${IPFW_iip}" ]; then
-  ${fwcmd} add skipto 15100 ip4 from ${IPFW_inet} to any via ${IPFW_oif2} out
+ y=$(( ${y} + 5 )) # 5 rules max.
+done
+y=1700
+for i in "${IPFW_WANS_list}"; do
+ j="IPFW_oip${i}"
+ if [ -n "${!j}" ]; then
+  k="IPFW_oif${i}"
+  x=$(( 45000 + ( ( ${i} - 1 ) * 10 ) ))
+  for ii in "${IPFW_WANS_list}"; do
+   if [[ ! x"${j}" == x"${jj}" ]]; then
+    jj="IPFW_oip${ii}"
+    if [ -n "${!jj}" ]; then
+     ${fwcmd} add ${y} skipto ${x} ip4 from ${!jj} to any via ${!k} out
+     y=$(( ${y} + 1 ))
+    fi
+   fi
+  done
+  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${!k} out
+  y=$(( ${y} + 1 ))
  fi
- if [ -n "${IPFW_iip2}" ]; then
-  ${fwcmd} add skipto 15100 ip4 from ${IPFW_inet2} to any via ${IPFW_oif2} out
- fi
- if [ -n "${IPFW_iip3}" ]; then
-  ${fwcmd} add skipto 15100 ip4 from ${IPFW_inet3} to any via ${IPFW_oif2} out
- fi
- ${fwcmd} add skipto 15100 ip4 from any to 255.255.255.255 via ${IPFW_oif2} out
-fi
-if [ -n "${IPFW_oip3}" ]; then
- ${fwcmd} add 150 skipto 15200 ip4 from ${IPFW_oip3} to any via ${IPFW_oif3} out
- if [ -n "${IPFW_iip}" ]; then
-  ${fwcmd} add skipto 15200 ip4 from ${IPFW_inet} to any via ${IPFW_oif3} out
- fi
- if [ -n "${IPFW_iip2}" ]; then
-  ${fwcmd} add skipto 15200 ip4 from ${IPFW_inet2} to any via ${IPFW_oif3} out
- fi
- if [ -n "${IPFW_iip3}" ]; then
-  ${fwcmd} add skipto 15200 ip4 from ${IPFW_inet3} to any via ${IPFW_oif3} out
- fi
- ${fwcmd} add skipto 15200 ip4 from any to 255.255.255.255 via ${IPFW_oif3} out
-fi
-if [ -n "${IPFW_iip}" ]; then
- ${fwcmd} add 180 skipto 5000 log ip4 from any to any via ${IPFW_iif} out
-fi
-if [ -n "${IPFW_iip2}" ]; then
- ${fwcmd} add skipto 5100 log ip4 from any to any via ${IPFW_iif2} out
-fi
-if [ -n "${IPFW_iip3}" ]; then
- ${fwcmd} add skipto 5200 log ip4 from any to any via ${IPFW_iif3} out
-fi
-if [ -n "${IPFW_oip}" ]; then
- if [ -n "${IPFW_oip2}" ]; then
-  ${fwcmd} add skipto 15000 ip4 from ${IPFW_oip2} to any via ${IPFW_oif} out
- fi
- if [ -n "${IPFW_oip3}" ]; then
-  ${fwcmd} add skipto 15000 ip4 from ${IPFW_oip3} to any via ${IPFW_oif} out
- fi
- ${fwcmd} add skipto 15000 log ip4 from any to any via ${IPFW_oif} out
-fi
-if [ -n "${IPFW_oip2}" ]; then
- if [ -n "${IPFW_oip}" ]; then
-  ${fwcmd} add skipto 15100 ip4 from ${IPFW_oip} to any via ${IPFW_oif2} out
- fi
- if [ -n "${IPFW_oip3}" ]; then
-  ${fwcmd} add skipto 15100 ip4 from ${IPFW_oip3} to any via ${IPFW_oif2} out
- fi
- ${fwcmd} add skipto 15100 log ip4 from any to any via ${IPFW_oif2} out
-fi
-if [ -n "${IPFW_oip3}" ]; then
- if [ -n "${IPFW_oip}" ]; then
-  ${fwcmd} add skipto 15200 ip4 from ${IPFW_oip} to any via ${IPFW_oif3} out
- fi
- if [ -n "${IPFW_oip2}" ]; then
-  ${fwcmd} add skipto 15200 ip4 from ${IPFW_oip2} to any via ${IPFW_oif3} out
- fi
- ${fwcmd} add skipto 15200 log ip4 from any to any via ${IPFW_oif3} out
-fi
+done
 # IPv4 In
-if [ -n "${IPFW_iip}" ]; then
- ${fwcmd} add 200 skipto 7000 ip4 from any to ${IPFW_iip} via ${IPFW_iif} in
- ${fwcmd} add skipto 7000 ip4 from ${IPFW_inet} to any via ${IPFW_iif} in
- ${fwcmd} add skipto 7000 ip4 from any to 255.255.255.255 via ${IPFW_iif} in
-fi
-if [ -n "${IPFW_iip2}" ]; then
- ${fwcmd} add 210 skipto 7100 ip4 from any to ${IPFW_iip2} via ${IPFW_iif2} in
- ${fwcmd} add skipto 7100 ip4 from ${IPFW_inet2} to any via ${IPFW_iif2} in
- ${fwcmd} add skipto 7100 ip4 from any to 255.255.255.255 via ${IPFW_iif2} in
-fi
-if [ -n "${IPFW_iip3}" ]; then
- ${fwcmd} add 220 skipto 7200 ip4 from any to ${IPFW_iip3} via ${IPFW_iif3} in
- ${fwcmd} add skipto 7200 ip4 from ${IPFW_inet3} to any via ${IPFW_iif3} in
- ${fwcmd} add skipto 7200 ip4 from any to 255.255.255.255 via ${IPFW_iif3} in
-fi
-if [ -n "${IPFW_oip}" ]; then
- ${fwcmd} add 230 skipto 13000 ip4 from any to ${IPFW_oip} via ${IPFW_oif} in
- if [ -n "${IPFW_iip}" ]; then
-  ${fwcmd} add skipto 13000 ip4 from any to ${IPFW_inet} via ${IPFW_oif} in
+y=3000
+for i in "${IPFW_LANS_list}"; do
+ j="IPFW_iip${i}"
+ if [ -n "${!j}" ]; then
+  k="IPFW_iif${i}"
+  l="IPFW_inet${i}"
+  x=$(( 25000 + ( ( ${i} - 1 ) * 10 ) ))
+  ${fwcmd} add ${y} skipto ${x} ip4 from any to ${!j} via ${!k} in
+  ${fwcmd} add skipto ${x} ip4 from ${!l} to any via ${!k} in
+  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${!k} in
  fi
- if [ -n "${IPFW_iip2}" ]; then
-  ${fwcmd} add skipto 13000 ip4 from any to ${IPFW_inet2} via ${IPFW_oif} in
+ y=$(( ${y} + 5 )) # 5 rules max.
+done
+y=3100
+for i in "${IPFW_WANS_list}"; do
+ j="IPFW_oip${i}"
+ if [ -n "${!j}" ]; then
+  k="IPFW_oif${i}"
+  l=$(( ${i} * 2 ))
+  x=$(( 40000 + ( ( ${i} - 1 ) * 10 ) ))
+  ${fwcmd} add ${y} skipto ${x} ip4 from any to ${!j} via ${!k} in
+  for ii in "${IPFW_LANS_list}"; do
+   jj="IPFW_iip${ii}"
+   if [ -n "${!jj}" ]; then
+    kk="IPFW_inet${ii}"
+    ${fwcmd} add skipto ${x} ip4 from any to ${!kk} via ${!k} in
+   fi
+  done
+  if [ x"${IPFW_DHCP}" == x"1" ]; then
+   ${fwcmd} add skipto ${x} ip4 from 0.0.0.0 to 255.255.255.255 via ${!k} in
+  fi
+  ${fwcmd} add ${IPFW_deny} ip4 from any to 255.255.255.255 via ${!k} in
  fi
- if [ -n "${IPFW_iip3}" ]; then
-  ${fwcmd} add skipto 13000 ip4 from any to ${IPFW_inet3} via ${IPFW_oif} in
+ y=$(( ${y} + 25 ))
+done
+y=3600
+for i in "${IPFW_LANS_list}"; do
+ j="IPFW_iip${i}"
+ if [ -n "${!j}" ]; then
+  k="IPFW_iif${i}"
+  x=$(( 25000 + ( ( ${i} - 1 ) * 10 ) ))
+  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${!k} in
  fi
- if [ "${IPFW_DHCP}" == "1" ]; then
-  ${fwcmd} add skipto 13000 ip4 from 0.0.0.0 to 255.255.255.255 via ${IPFW_oif} in
+ y=$(( ${y} + 5 )) # max. 5 rules
+done
+y=3700
+for i in "${IPFW_WANS_list}"; do
+ j="IPFW_oip${i}"
+ if [ -n "${!j}" ]; then
+  k="IPFW_oif${i}"
+  x=$(( 40000 + ( ( ${i} - 1 ) * 10 ) ))
+  ${fwcmd} add ${y} ${IPFW_deny} igmp from any to any via ${!k} in
+  ${fwcmd} add skipto ${x} log ip4 from any to any via ${!k} in
  fi
- ${fwcmd} add ${IPFW_deny} ip4 from any to 255.255.255.255 via ${IPFW_oif} in
-fi
-if [ -n "${IPFW_oip2}" ]; then
- ${fwcmd} add 240 skipto 13100 ip4 from any to ${IPFW_oip2} via ${IPFW_oif2} in
- if [ -n "${IPFW_iip}" ]; then
-  ${fwcmd} add skipto 13100 ip4 from any to ${IPFW_inet} via ${IPFW_oif2} in
- fi
- if [ -n "${IPFW_iip2}" ]; then
-  ${fwcmd} add skipto 13100 ip4 from any to ${IPFW_inet2} via ${IPFW_oif2} in
- fi
- if [ -n "${IPFW_iip3}" ]; then
-  ${fwcmd} add skipto 13100 ip4 from any to ${IPFW_inet3} via ${IPFW_oif2} in
- fi
- if [ "${IPFW_DHCP}" == "1" ]; then
-  ${fwcmd} add skipto 13100 ip4 from 0.0.0.0 to 255.255.255.255 via ${IPFW_oif2} in
- fi
- ${fwcmd} add ${IPFW_deny} ip4 from any to 255.255.255.255 via ${IPFW_oif2} in
-fi
-if [ -n "${IPFW_oip3}" ]; then
- ${fwcmd} add 250 skipto 13200 ip4 from any to ${IPFW_oip3} via ${IPFW_oif3} in
- if [ -n "${IPFW_iip}" ]; then
-  ${fwcmd} add skipto 13200 ip4 from any to ${IPFW_inet} via ${IPFW_oif3} in
- fi
- if [ -n "${IPFW_iip2}" ]; then
-  ${fwcmd} add skipto 13200 ip4 from any to ${IPFW_inet2} via ${IPFW_oif3} in
- fi
- if [ -n "${IPFW_iip3}" ]; then
-  ${fwcmd} add skipto 13200 ip4 from any to ${IPFW_inet3} via ${IPFW_oif3} in
- fi
- if [ "${IPFW_DHCP}" == "1" ]; then
-  ${fwcmd} add skipto 13200 ip4 from 0.0.0.0 to 255.255.255.255 via ${IPFW_oif3} in
- fi
- ${fwcmd} add ${IPFW_deny} ip4 from any to 255.255.255.255 via ${IPFW_oif3} in
-fi
-if [ -n "${IPFW_iip}" ]; then
- ${fwcmd} add 280 skipto 7000 log ip4 from any to any via ${IPFW_iif} in
-fi
-if [ -n "${IPFW_iip2}" ]; then
- ${fwcmd} add skipto 7100 log ip4 from any to any via ${IPFW_iif2} in
-fi
-if [ -n "${IPFW_iip3}" ]; then
- ${fwcmd} add skipto 7200 log ip4 from any to any via ${IPFW_iif3} in
-fi
-if [ -n "${IPFW_oip}" ]; then
- ${fwcmd} add ${IPFW_deny} igmp from any to any via ${IPFW_oif} in
- ${fwcmd} add skipto 13000 log ip4 from any to any via ${IPFW_oif} in
-fi
-if [ -n "${IPFW_oip2}" ]; then
- ${fwcmd} add ${IPFW_deny} igmp from any to any via ${IPFW_oif2} in
- ${fwcmd} add skipto 13100 log ip4 from any to any via ${IPFW_oif2} in
-fi
-if [ -n "${IPFW_oip3}" ]; then
- ${fwcmd} add ${IPFW_deny} igmp from any to any via ${IPFW_oif3} in
- ${fwcmd} add skipto 13200 log ip4 from any to any via ${IPFW_oif3} in
-fi
+ y=$(( ${y} + 5 )) # max. 5 rules
+done
 if [ $ipv6_available -eq 0 ]; then
 # IPv6 Out
- if [ -n "${IPFW_iip_6}" ]; then
-  ${fwcmd} add 300 skipto 1000 ip6 from ${IPFW_iip_6} to any via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 ip6 from any to ${IPFW_inet_6} via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_iif} out
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 ip6 from fe80::/10 to any via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_iif} out
- fi
- if [ -n "${IPFW_iip2_6}" ]; then
-  ${fwcmd} add 310 skipto 1100 ip6 from ${IPFW_iip2_6} to any via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 ip6 from any to ${IPFW_inet2_6} via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_iif2} out
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 ip6 from fe80::/10 to any via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_iif2} out
- fi
- if [ -n "${IPFW_iip3_6}" ]; then
-  ${fwcmd} add 320 skipto 1200 ip6 from ${IPFW_iip3_6} to any via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 ip6 from any to ${IPFW_inet3_6} via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_iif3} out
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 ip6 from fe80::/10 to any via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_iif3} out
- fi
- if [ -n "${IPFW_oip_6}" ]; then
-  ${fwcmd} add 330 skipto 11000 ip6 from ${IPFW_oip_6} to any via ${IPFW_oif} out
-  if [ -n "${IPFW_iip_6}" ]; then
-   ${fwcmd} add skipto 11000 ip6 from ${IPFW_inet_6} to any via ${IPFW_oif} out
+ y=5000
+ for i in "${IPFW_LANS_list}"; do
+  j="IPFW_iip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_iif${i}"
+   l="IPFW_inet${i}_6"
+   x=$(( 10000 + ( ( ${i} - 1 ) * 10 ) ))
+   ${fwcmd} add ${y} skipto ${x} ip6 from ${!j} to any via ${!k} out
+   ${fwcmd} add skipto ${x} ip6 from any to ${!l} via ${!k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${!k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${!k} out
+   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${!k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${!k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${!k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${!k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${!k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${!k} out
   fi
-  if [ -n "${IPFW_iip2_6}" ]; then
-   ${fwcmd} add skipto 11000 ip6 from ${IPFW_inet2_6} to any via ${IPFW_oif} out
+  y=$(( ${y} + 20 )) # 20 rules max.
+ done
+ y=5400
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   x=$(( 35000 + ( ( ${i} - 1 ) * 10 ) ))
+   ${fwcmd} add ${y} skipto ${x} ip6 from ${!j} to any via ${!k} out
+   for ii in "${IPFW_LANS_list}"; do
+    jj="IPFW_iip${ii}_6"
+    if [ -n "${!jj}" ]; then
+     kk="IPFW_inet${i}_6"
+     ${fwcmd} add skipto ${x} ip6 from ${!kk} to any via ${!k} out
+    fi
+   done
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${!k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${!k} out
+   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${!k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${!k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${!k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${!k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${!k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${!k} out
   fi
-  if [ -n "${IPFW_iip3_6}" ]; then
-   ${fwcmd} add skipto 11000 ip6 from ${IPFW_inet3_6} to any via ${IPFW_oif} out
+  y=$(( ${y} + 40 )) # 40 rules max.
+ done
+ y=6200
+ for i in "${IPFW_LANS_list}"; do
+  j="IPFW_iip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_iif${i}"
+   x=$(( 10000 + ( ( ${i} - 1 ) * 10 ) ))
+   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${!k} out
+   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${!k} out
   fi
-  ${fwcmd} add skipto 11000 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_oif} out
-  ${fwcmd} add skipto 11000 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_oif} out
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_oif} out
-  ${fwcmd} add skipto 11000 ip6 from fe80::/10 to any via ${IPFW_oif} out
-  ${fwcmd} add skipto 11000 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_oif} out
-  ${fwcmd} add skipto 11000 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_oif} out
-  ${fwcmd} add skipto 11000 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_oif} out
-  ${fwcmd} add skipto 11000 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_oif} out
- fi
- if [ -n "${IPFW_oip2_6}" ]; then
-  ${fwcmd} add 340 skipto 11100 ip6 from ${IPFW_oip2_6} to any via ${IPFW_oif2} out
-  if [ -n "${IPFW_iip_6}" ]; then
-   ${fwcmd} add skipto 11100 ip6 from ${IPFW_inet_6} to any via ${IPFW_oif2} out
+  y=$(( ${y} + 5 )) # 5 rules max.
+ done
+ y=6300
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   x=$(( 35000 + ( ( ${i} - 1 ) * 10 ) ))
+   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${!k} out
+   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${!k} out
   fi
-  if [ -n "${IPFW_iip2_6}" ]; then
-   ${fwcmd} add skipto 11100 ip6 from ${IPFW_inet2_6} to any via ${IPFW_oif2} out
-  fi
-  if [ -n "${IPFW_iip3_6}" ]; then
-   ${fwcmd} add skipto 11100 ip6 from ${IPFW_inet3_6} to any via ${IPFW_oif2} out
-  fi
-  ${fwcmd} add skipto 11100 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_oif2} out
-  ${fwcmd} add skipto 11100 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_oif2} out
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_oif2} out
-  ${fwcmd} add skipto 11100 ip6 from fe80::/10 to any via ${IPFW_oif2} out
-  ${fwcmd} add skipto 11100 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_oif2} out
-  ${fwcmd} add skipto 11100 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_oif2} out
-  ${fwcmd} add skipto 11100 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_oif2} out
-  ${fwcmd} add skipto 11100 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_oif2} out
- fi
- if [ -n "${IPFW_oip3_6}" ]; then
-  ${fwcmd} add 350 skipto 11200 ip6 from ${IPFW_oip3_6} to any via ${IPFW_oif3} out
-  if [ -n "${IPFW_iip_6}" ]; then
-   ${fwcmd} add skipto 11200 ip6 from ${IPFW_inet_6} to any via ${IPFW_oif3} out
-  fi
-  if [ -n "${IPFW_iip2_6}" ]; then
-   ${fwcmd} add skipto 11200 ip6 from ${IPFW_inet2_6} to any via ${IPFW_oif3} out
-  fi
-  if [ -n "${IPFW_iip3_6}" ]; then
-   ${fwcmd} add skipto 11200 ip6 from ${IPFW_inet3_6} to any via ${IPFW_oif3} out
-  fi
-  ${fwcmd} add skipto 11200 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_oif3} out
-  ${fwcmd} add skipto 11200 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_oif3} out
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_oif3} out
-  ${fwcmd} add skipto 11200 ip6 from fe80::/10 to any via ${IPFW_oif3} out
-  ${fwcmd} add skipto 11200 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_oif3} out
-  ${fwcmd} add skipto 11200 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_oif3} out
-  ${fwcmd} add skipto 11200 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_oif3} out
-  ${fwcmd} add skipto 11200 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_oif3} out
- fi
- if [ -n "${IPFW_iip_6}" ]; then
-  ${fwcmd} add 380 skipto 1000 log ip6 from any to any via ${IPFW_iif} out
-  ${fwcmd} add skipto 1000 log ipv6-icmp from any to any via ${IPFW_iif} out
- fi
- if [ -n "${IPFW_iip2_6}" ]; then
-  ${fwcmd} add skipto 1100 log ip6 from any to any via ${IPFW_iif2} out
-  ${fwcmd} add skipto 1100 log ipv6-icmp from any to any via ${IPFW_iif2} out
- fi
- if [ -n "${IPFW_iip3_6}" ]; then
-  ${fwcmd} add skipto 1200 log ip6 from any to any via ${IPFW_iif3} out
-  ${fwcmd} add skipto 1200 log ipv6-icmp from any to any via ${IPFW_iif3} out
- fi
- if [ -n "${IPFW_oip_6}" ]; then
-  ${fwcmd} add skipto 11000 log ip6 from any to any via ${IPFW_oif} out
-  ${fwcmd} add skipto 11000 log ipv6-icmp from any to any via ${IPFW_oif} out
- fi
- if [ -n "${IPFW_oip2_6}" ]; then
-  ${fwcmd} add skipto 11100 log ip6 from any to any via ${IPFW_oif2} out
-  ${fwcmd} add skipto 11100 log ipv6-icmp from any to any via ${IPFW_oif2} out
- fi
- if [ -n "${IPFW_oip3_6}" ]; then
-  ${fwcmd} add skipto 11200 log ip6 from any to any via ${IPFW_oif3} out
-  ${fwcmd} add skipto 11200 log ipv6-icmp from any to any via ${IPFW_oif3} out
- fi
+  y=$(( ${y} + 5 )) # 5 rules max.
+ done
 # IPv6 In
- if [ -n "${IPFW_iip_6}" ]; then
-  ${fwcmd} add 400 skipto 3000 ip6 from any to ${IPFW_iip_6} via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 ip6 from ${IPFW_inet_6} to any via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_iif} in
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 ip6 from fe80::/10 to any via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_iif} in
- fi
- if [ -n "${IPFW_iip2_6}" ]; then
-  ${fwcmd} add 410 skipto 3100 ip6 from any to ${IPFW_iip2_6} via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 ip6 from ${IPFW_inet2_6} to any via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_iif2} in
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 ip6 from fe80::/10 to any via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_iif2} in
- fi
- if [ -n "${IPFW_iip3_6}" ]; then
-  ${fwcmd} add 420 skipto 3200 ip6 from any to ${IPFW_iip3_6} via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 ip6 from ${IPFW_inet3_6} to any via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_iif3} in
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 ip6 from fe80::/10 to any via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_iif3} in
- fi
- if [ -n "${IPFW_oip_6}" ]; then
-  ${fwcmd} add 430 skipto 9000 ip6 from any to ${IPFW_oip_6} via ${IPFW_oif} in
-  ${fwcmd} add skipto 9000 ip6 from ${IPFW_onet_6} to fe00::/4 via ${IPFW_oif} in
-  if [ -n "${IPFW_iip_6}" ]; then
-   ${fwcmd} add skipto 9000 ip6 from any to ${IPFW_inet_6} via ${IPFW_oif} in
+ y=7000
+ for i in "${IPFW_LANS_list}"; do
+  j="IPFW_iip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_iif${i}"
+   l="IPFW_inet${i}_6"
+   x=$(( 15000 + ( ( ${i} - 1 ) * 10 ) ))
+   ${fwcmd} add ${y} skipto ${x} ip6 from any to ${!j} via ${!k} in
+   ${fwcmd} add skipto ${x} ip6 from ${!l} to any via ${!k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${!k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${!k} in
+   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${!k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${!k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${!k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${!k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${!k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${!k} in
   fi
-  if [ -n "${IPFW_iip2_6}" ]; then
-   ${fwcmd} add skipto 9000 ip6 from any to ${IPFW_inet2_6} via ${IPFW_oif} in
+  y=$(( ${y} + 20 )) # 20 rules max.
+ done
+ y=7400
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   l="IPFW_onet${i}_6"
+   x=$(( 30000 + ( ( ${i} - 1 ) * 10 ) ))
+   ${fwcmd} add ${y} skipto ${x} ip6 from any to ${!j} via ${!k} in
+   ${fwcmd} add skipto ${x} ip6 from ${!l} to fe00::/4 via ${!k} in
+   for ii in "${IPFW_LANS_list}"; do
+    jj="IPFW_iip${ii}_6"
+    if [ -n "${!jj}" ]; then
+     kk="IPFW_inet${i}_6"
+     ${fwcmd} add skipto ${x} ip6 from any to ${!kk} via ${!k} in
+    fi
+   done
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${!k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${!k} in
+   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${!k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${!k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${!k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${!k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${!k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${!k} in
   fi
-  if [ -n "${IPFW_iip3_6}" ]; then
-   ${fwcmd} add skipto 9000 ip6 from any to ${IPFW_inet3_6} via ${IPFW_oif} in
+  y=$(( ${y} + 40 )) # 40 rules max.
+ done
+ y=8200
+ for i in "${IPFW_LANS_list}"; do
+  j="IPFW_iip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_iif${i}"
+   x=$(( 15000 + ( ( ${i} - 1 ) * 10 ) ))
+   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${!k} in
+   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${!k} in
   fi
-  ${fwcmd} add skipto 9000 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_oif} in
-  ${fwcmd} add skipto 9000 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_oif} in
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_oif} in
-  ${fwcmd} add skipto 9000 ip6 from fe80::/10 to any via ${IPFW_oif} in
-  ${fwcmd} add skipto 9000 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_oif} in
-  ${fwcmd} add skipto 9000 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_oif} in
-  ${fwcmd} add skipto 9000 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_oif} in
-  ${fwcmd} add skipto 9000 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_oif} in
- fi
- if [ -n "${IPFW_oip2_6}" ]; then
-  ${fwcmd} add 440 skipto 9100 ip6 from any to ${IPFW_oip2_6} via ${IPFW_oif2} in
-  ${fwcmd} add skipto 9100 ip6 from ${IPFW_onet2_6} to fe00::/4 via ${IPFW_oif2} in
-  if [ -n "${IPFW_iip_6}" ]; then
-   ${fwcmd} add skipto 9100 ip6 from any to ${IPFW_inet_6} via ${IPFW_oif2} in
+  y=$(( ${y} + 5 )) # 5 rules max.
+ done
+ y=8300
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   x=$(( 30000 + ( ( ${i} - 1 ) * 10 ) ))
+   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${!k} in
+   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${!k} in
   fi
-  if [ -n "${IPFW_iip2_6}" ]; then
-   ${fwcmd} add skipto 9100 ip6 from any to ${IPFW_inet2_6} via ${IPFW_oif2} in
-  fi
-  if [ -n "${IPFW_iip3_6}" ]; then
-   ${fwcmd} add skipto 9100 ip6 from any to ${IPFW_inet3_6} via ${IPFW_oif2} in
-  fi
-  ${fwcmd} add skipto 9100 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_oif2} in
-  ${fwcmd} add skipto 9100 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_oif2} in
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_oif2} in
-  ${fwcmd} add skipto 9100 ip6 from fe80::/10 to any via ${IPFW_oif2} in
-  ${fwcmd} add skipto 9100 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_oif2} in
-  ${fwcmd} add skipto 9100 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_oif2} in
-  ${fwcmd} add skipto 9100 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_oif2} in
-  ${fwcmd} add skipto 9100 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_oif2} in
- fi
- if [ -n "${IPFW_oip3_6}" ]; then
-  ${fwcmd} add 450 skipto 9200 ip6 from any to ${IPFW_oip3_6} via ${IPFW_oif3} in
-  ${fwcmd} add skipto 9200 ip6 from ${IPFW_onet3_6} to fe00::/4 via ${IPFW_oif3} in
-  if [ -n "${IPFW_iip_6}" ]; then
-   ${fwcmd} add skipto 9200 ip6 from any to ${IPFW_inet_6} via ${IPFW_oif3} in
-  fi
-  if [ -n "${IPFW_iip2_6}" ]; then
-   ${fwcmd} add skipto 9200 ip6 from any to ${IPFW_inet2_6} via ${IPFW_oif3} in
-  fi
-  if [ -n "${IPFW_iip3_6}" ]; then
-   ${fwcmd} add skipto 9200 ip6 from any to ${IPFW_inet3_6} via ${IPFW_oif3} in
-  fi
-  ${fwcmd} add skipto 9200 ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${IPFW_oif3} in
-  ${fwcmd} add skipto 9200 ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${IPFW_oif3} in
-  ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${IPFW_oif3} in
-  ${fwcmd} add skipto 9200 ip6 from fe80::/10 to any via ${IPFW_oif3} in
-  ${fwcmd} add skipto 9200 ipv6-icmp from ::/128 to ff02::/16 via ${IPFW_oif3} in
-  ${fwcmd} add skipto 9200 ipv6-icmp from fe80::/10 to fe80::/10 via ${IPFW_oif3} in
-  ${fwcmd} add skipto 9200 ipv6-icmp from fe80::/10 to ff02::/16 via ${IPFW_oif3} in
-  ${fwcmd} add skipto 9200 ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${IPFW_oif3} in
- fi
- if [ -n "${IPFW_iip_6}" ]; then
-  ${fwcmd} add 480 skipto 3000 log ip6 from any to any via ${IPFW_iif} in
-  ${fwcmd} add skipto 3000 log ipv6-icmp from any to any via ${IPFW_iif} in
- fi
- if [ -n "${IPFW_iip2_6}" ]; then
-  ${fwcmd} add skipto 3100 log ip6 from any to any via ${IPFW_iif2} in
-  ${fwcmd} add skipto 3100 log ipv6-icmp from any to any via ${IPFW_iif2} in
- fi
- if [ -n "${IPFW_iip3_6}" ]; then
-  ${fwcmd} add skipto 3200 log ip6 from any to any via ${IPFW_iif3} in
-  ${fwcmd} add skipto 3200 log ipv6-icmp from any to any via ${IPFW_iif3} in
- fi
- if [ -n "${IPFW_oip_6}" ]; then
-  ${fwcmd} add skipto 9000 log ip6 from any to any via ${IPFW_oif} in
-  ${fwcmd} add skipto 9000 log ipv6-icmp from any to any via ${IPFW_oif} in
- fi
- if [ -n "${IPFW_oip2_6}" ]; then
-  ${fwcmd} add skipto 9100 log ip6 from any to any via ${IPFW_oif2} in
-  ${fwcmd} add skipto 9100 log ipv6-icmp from any to any via ${IPFW_oif2} in
- fi
- if [ -n "${IPFW_oip3_6}" ]; then
-  ${fwcmd} add skipto 9200 log ip6 from any to any via ${IPFW_oif3} in
-  ${fwcmd} add skipto 9200 log ipv6-icmp from any to any via ${IPFW_oif3} in
- fi
+  y=$(( ${y} + 5 )) # 5 rules max.
+ done
 fi
-${fwcmd} add 999 skipto 65500 log all from any to any
+${fwcmd} add 9999 skipto 65500 log all from any to any
 
 ########################
 ########################
@@ -547,195 +336,171 @@ ${fwcmd} add 999 skipto 65500 log all from any to any
 if [ "${IPFW_LAN_6}" == "1" ]; then
 ########################
 # All LANs IPv6 out
-if [ -n "${IPFW_iip_6}" ]; then
- ${fwcmd} add 1000 count ip6 from any to any via ${IPFW_iif} out
-# LAN1
- if [ -n "${IPFW_iip3_6}" ] || [ -n "${IPFW_iip2_6}" ]; then
-  ${fwcmd} add 1099 skipto 1300 all from any to any
- fi
-fi
-if [ -n "${IPFW_iip2_6}" ]; then
- ${fwcmd} add 1100 count ip6 from any to any via ${IPFW_iif2} out
-# LAN2
- if [ -n "${IPFW_iip3_6}" ]; then
-  ${fwcmd} add 1199 skipto 1300 all from any to any
- fi
-fi
-if [ -n "${IPFW_iip3_6}" ]; then
- ${fwcmd} add 1200 count ip6 from any to any via ${IPFW_iif3} out
-# LAN3
-fi
-${fwcmd} add 1300 ${IPFW_allow} ipv6-icmp from ::/128 to ff02::/16
-${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to fe80::/10
-${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to ff02::/16
-${fwcmd} add ${IPFW_allow} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136
-${fwcmd} add ${IPFW_allowlog} ipv6-icmp from any to any
-${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 546,547 to fe80::/10 546,547
-${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547
-${fwcmd} add ${IPFW_allow} ip6 from table\(LOCAL_RANGES6\) to table\(LOCAL_RANGES6\)
-${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355
+ y=10000
+ for i in "${IPFW_LANS_list}"; do
+  j="IPFW_iip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_iif${i}"
+   ${fwcmd} add ${y} count ip6 from any to any via ${!k} out
+   if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
+    ${fwcmd} add skipto 11000 all from any to any
+   fi
+  fi
+  y=$(( ${y} + 10 ))
+ done
+ ${fwcmd} add 11000 ${IPFW_allow} ipv6-icmp from ::/128 to ff02::/16
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to fe80::/10
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to ff02::/16
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136
+ ${fwcmd} add ${IPFW_allowlog} ipv6-icmp from any to any
+ ${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 546,547 to fe80::/10 546,547
+ ${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547
+ ${fwcmd} add ${IPFW_allow} ip6 from table\(LOCAL_RANGES6\) to table\(LOCAL_RANGES6\)
+ ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355
 ###
-for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} ip6 from any to any ${ports}
-  ${fwcmd} add ${IPFW_allow} ip6 from any ${ports} to any
- fi
-done
+ for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} ip6 from any to any ${ports}
+   ${fwcmd} add ${IPFW_allow} ip6 from any ${ports} to any
+  fi
+ done
 ###
-${fwcmd} add ${IPFW_allowlog} tcp from any to any
-${fwcmd} add ${IPFW_allowlog} udp from any to any
-${fwcmd} add ${IPFW_allowlog} all from any to any
+ ${fwcmd} add 14900 ${IPFW_allowlog} tcp from any to any
+ ${fwcmd} add ${IPFW_allowlog} udp from any to any
+ ${fwcmd} add ${IPFW_allowlog} all from any to any
 ########################
 # All LANs IPv6 in
-if [ -n "${IPFW_iip_6}" ]; then
- ${fwcmd} add 3000 count ip6 from any to any via ${IPFW_iif} in
-# LAN1
- if [ -n "${IPFW_iip3_6}" ] || [ -n "${IPFW_iip2_6}" ]; then
-  ${fwcmd} add 3099 skipto 3300 all from any to any
- fi
-fi
-if [ -n "${IPFW_iip2_6}" ]; then
- ${fwcmd} add 3100 count ip6 from any to any via ${IPFW_iif2} in
-# LAN2
- if [ -n "${IPFW_iip3_6}" ]; then
-  ${fwcmd} add 3199 skipto 3300 all from any to any
- fi
-fi
-if [ -n "${IPFW_iip3_6}" ]; then
- ${fwcmd} add 3200 count ip6 from any to any via ${IPFW_iif3} in
-# LAN3
-fi
-${fwcmd} add 3300 ${IPFW_allow} ipv6-icmp from ::/128 to ff02::/16
-${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to fe80::/10
-${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to ff02::/16
-${fwcmd} add ${IPFW_allow} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136
-${fwcmd} add ${IPFW_allowlog} ipv6-icmp from any to any
-${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 546,547 to fe80::/10 546,547
-${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547
-${fwcmd} add ${IPFW_allow} ip6 from table\(LOCAL_RANGES6\) to table\(LOCAL_RANGES6\)
-${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355
+ y=15000
+ for i in "${IPFW_LANS_list}"; do
+  j="IPFW_iip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_iif${i}"
+   ${fwcmd} add ${y} count ip6 from any to any via ${!k} in
+   if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
+    ${fwcmd} add skipto 16000 all from any to any
+   fi
+  fi
+  y=$(( ${y} + 10 ))
+ done
+ ${fwcmd} add 16000 ${IPFW_allow} ipv6-icmp from ::/128 to ff02::/16
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to fe80::/10
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to ff02::/16
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136
+ ${fwcmd} add ${IPFW_allowlog} ipv6-icmp from any to any
+ ${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 546,547 to fe80::/10 546,547
+ ${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547
+ ${fwcmd} add ${IPFW_allow} ip6 from table\(LOCAL_RANGES6\) to table\(LOCAL_RANGES6\)
+ ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355
 ###
-for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} ip6 from any to any ${ports}
-  ${fwcmd} add ${IPFW_allow} ip6 from any ${ports} to any
- fi
-done
+ for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} ip6 from any to any ${ports}
+   ${fwcmd} add ${IPFW_allow} ip6 from any ${ports} to any
+  fi
+ done
 ###
-${fwcmd} add ${IPFW_allowlog} tcp from any to any
-${fwcmd} add ${IPFW_allowlog} udp from any to any
-${fwcmd} add ${IPFW_allowlog} all from any to any
+ ${fwcmd} add 19900 ${IPFW_allowlog} tcp from any to any
+ ${fwcmd} add ${IPFW_allowlog} udp from any to any
+ ${fwcmd} add ${IPFW_allowlog} all from any to any
 ########################
 fi
 if [ "${IPFW_LAN_4}" == "1" ]; then
 ########################
 # All LANs IPv4 out
-if [ -n "${IPFW_iip}" ]; then
- ${fwcmd} add 5000 count ip4 from any to any via ${IPFW_iif} out
-# LAN1
- if [ -n "${IPFW_iip3}" ] || [ -n "${IPFW_iip2}" ]; then
-  ${fwcmd} add 5099 skipto 5300 all from any to any
- fi
-fi
-if [ -n "${IPFW_iip2}" ]; then
- ${fwcmd} add 5100 count ip4 from any to any via ${IPFW_iif2} out
-# LAN2
- if [ -n "${IPFW_iip3}" ]; then
-  ${fwcmd} add 5199 skipto 5300 all from any to any
- fi
-fi
-if [ -n "${IPFW_iip3}" ]; then
- ${fwcmd} add 5200 count ip4 from any to any via ${IPFW_iif3} out
-# LAN3
-fi
-${fwcmd} add 5300 ${IPFW_allow} icmp from any to any
-${fwcmd} add ${IPFW_allow} ip4 from table\(LOCAL_RANGES\) to table\(LOCAL_RANGES\)
+ y=20000
+ for i in "${IPFW_LANS_list}"; do
+  j="IPFW_iip${i}"
+  if [ -n "${!j}" ]; then
+   k="IPFW_iif${i}"
+   ${fwcmd} add ${y} count ip4 from any to any via ${!k} out
+   if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
+    ${fwcmd} add skipto 21000 all from any to any
+   fi
+  fi
+  y=$(( ${y} + 10 ))
+ done
+ ${fwcmd} add 21000 ${IPFW_allow} icmp from any to any
+ ${fwcmd} add ${IPFW_allow} ip4 from table\(LOCAL_RANGES\) to table\(LOCAL_RANGES\)
 ###
-for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} ip4 from any to any ${ports}
-  ${fwcmd} add ${IPFW_allow} ip4 from any ${ports} to any
- fi
-done
+ for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} ip4 from any to any ${ports}
+   ${fwcmd} add ${IPFW_allow} ip4 from any ${ports} to any
+  fi
+ done
 ###
-${fwcmd} add ${IPFW_allowlog} tcp from any to any
-${fwcmd} add ${IPFW_allowlog} udp from any to any
-${fwcmd} add ${IPFW_allowlog} gre from any to any
-${fwcmd} add ${IPFW_allowlog} igmp from any to any
-${fwcmd} add ${IPFW_allowlog} l2tp from any to any
-${fwcmd} add ${IPFW_allowlog} esp from any to any
-${fwcmd} add ${IPFW_allowlog} ah from any to any
-${fwcmd} add ${IPFW_allowlog} all from any to any
+ ${fwcmd} add 24900 ${IPFW_allowlog} tcp from any to any
+ ${fwcmd} add ${IPFW_allowlog} udp from any to any
+ ${fwcmd} add ${IPFW_allowlog} gre from any to any
+ ${fwcmd} add ${IPFW_allowlog} igmp from any to any
+ ${fwcmd} add ${IPFW_allowlog} l2tp from any to any
+ ${fwcmd} add ${IPFW_allowlog} esp from any to any
+ ${fwcmd} add ${IPFW_allowlog} ah from any to any
+ ${fwcmd} add ${IPFW_allowlog} all from any to any
 ########################
 # All LANs IPv4 in
-if [ -n "${IPFW_iip}" ]; then
- ${fwcmd} add 7000 count ip4 from any to any via ${IPFW_iif} in
-# LAN1
- if [ -n "${IPFW_iip3}" ] || [ -n "${IPFW_iip2}" ]; then
-  ${fwcmd} add 7099 skipto 7300 all from any to any
- fi
-fi
-if [ -n "${IPFW_iip2}" ]; then
- ${fwcmd} add 7100 count ip4 from any to any via ${IPFW_iif2} in
-# LAN2
- if [ -n "${IPFW_iip3}" ]; then
-  ${fwcmd} add 7199 skipto 7300 all from any to any
- fi
-fi
-if [ -n "${IPFW_iip3}" ]; then
- ${fwcmd} add 7200 count ip4 from any to any via ${IPFW_iif3} in
-# LAN3
-fi
-${fwcmd} add 7300 ${IPFW_allow} icmp from any to any
-${fwcmd} add ${IPFW_allow} ip4 from table\(LOCAL_RANGES\) to table\(LOCAL_RANGES\)
+ y=25000
+ for i in "${IPFW_LANS_list}"; do
+  j="IPFW_iip${i}"
+  if [ -n "${!j}" ]; then
+   k="IPFW_iif${i}"
+   ${fwcmd} add ${y} count ip4 from any to any via ${!k} in
+   if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
+    ${fwcmd} add skipto 26000 all from any to any
+   fi
+  fi
+  y=$(( ${y} + 10 ))
+ done
+ ${fwcmd} add 26000 ${IPFW_allow} icmp from any to any
+ ${fwcmd} add ${IPFW_allow} ip4 from table\(LOCAL_RANGES\) to table\(LOCAL_RANGES\)
 ### MULTI ISP - WAN failover
-if [ ${IPFW_multiwan} -eq 1 ]; then
- define_multiwan "port" "123,161,110,995,143,993,4949-4952" "120"	# NTP 120
- define_multiwan "port" "4021,4025,8883,5222,5223,5228,143,993" "210"			# DSC 210
- define_multiwan "port" "22,33322,48822,873,874,875,33873,48873,3389,43389-43402,443,8443,80,81,88,3128" "012"			# SSH 012
- define_multiwan "port" "8080,8180,33380,48880,1194,41194,53,853,953,25,465,587" "012"				# HTTPS 012
- define_multiwan "srchost" "COMPUTERS" "012"
- define_multiwan "srchost" "MOBILES" "120"
- define_multiwan "srchost" "TABLETS" "120"
- define_multiwan "srchost" "GUESTS" "210"
- define_multiwan "srchost" "IOTS" "120"
- define_multiwan "srchost" "CAMS" "210"
- define_multiwan "srchost" "ROBOTS" "120"
- define_multiwan "srchost" "AVRS" "120"
- define_multiwan "srchost" "TVS" "210"
- define_multiwan "srchost" "WIFIAPS" "012"
- define_multiwan "srchost" "PRINTERS" "120"
- define_multiwan "srchost" "SWITCHES" "210"
- define_multiwan "srchost" "SERVERS" "021"
+ if [ ${IPFW_multiwan} -eq 1 ]; then
+  define_multiwan "port" "123,161,110,995,143,993,4949-4952" "120"      # NTP 120
+  define_multiwan "port" "4021,4025,8883,5222,5223,5228,143,993" "210"                  # DSC 210
+  define_multiwan "port" "22,33322,48822,873,874,875,33873,48873,3389,43389-43402,443,8443,80,81,88,3128" "012"                 # SSH 012
+  define_multiwan "port" "8080,8180,33380,48880,1194,41194,53,853,953,25,465,587" "012"                         # HTTPS 012
+  define_multiwan "srchost" "COMPUTERS" "012"
+  define_multiwan "srchost" "MOBILES" "120"
+  define_multiwan "srchost" "TABLETS" "120"
+  define_multiwan "srchost" "GUESTS" "210"
+  define_multiwan "srchost" "IOTS" "120"
+  define_multiwan "srchost" "CAMS" "210"
+  define_multiwan "srchost" "ROBOTS" "120"
+  define_multiwan "srchost" "AVRS" "120"
+  define_multiwan "srchost" "TVS" "210"
+  define_multiwan "srchost" "WIFIAPS" "012"
+  define_multiwan "srchost" "PRINTERS" "120"
+  define_multiwan "srchost" "SWITCHES" "210"
+  define_multiwan "srchost" "SERVERS" "021"
   if [ -n "${IPFW_oip}" ]; then
-  define_multiwan "srchost" "WAN1" "012"
-  ${fwcmd} add setfib 0 all from any to ${IPFW_onet}
+   define_multiwan "srchost" "WAN1" "012"
+   ${fwcmd} add setfib 0 all from any to ${IPFW_onet}
+  fi
+  if [ -n "${IPFW_oip2}" ]; then
+   define_multiwan "srchost" "WAN2" "102"
+   ${fwcmd} add setfib 1 all from any to ${IPFW_onet2}
+  fi
+  if [ -n "${IPFW_oip3}" ]; then
+   define_multiwan "srchost" "WAN3" "201"
+   ${fwcmd} add setfib 2 all from any to ${IPFW_onet3}
+  fi
  fi
- if [ -n "${IPFW_oip2}" ]; then
-  define_multiwan "srchost" "WAN2" "102"
-  ${fwcmd} add setfib 1 all from any to ${IPFW_onet2}
- fi
- if [ -n "${IPFW_oip3}" ]; then
-  define_multiwan "srchost" "WAN3" "201"
-  ${fwcmd} add setfib 2 all from any to ${IPFW_onet3}
- fi
-fi
 ###
-for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} ip4 from any to any ${ports}
-  ${fwcmd} add ${IPFW_allow} ip4 from any ${ports} to any
- fi
-done
+ for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} ip4 from any to any ${ports}
+   ${fwcmd} add ${IPFW_allow} ip4 from any ${ports} to any
+  fi
+ done
 ###
-${fwcmd} add ${IPFW_allowlog} tcp from any to any
-${fwcmd} add ${IPFW_allowlog} udp from any to any
-${fwcmd} add ${IPFW_allowlog} gre from any to any
-${fwcmd} add ${IPFW_allowlog} igmp from any to any
-${fwcmd} add ${IPFW_allowlog} l2tp from any to any
-${fwcmd} add ${IPFW_allowlog} esp from any to any
-${fwcmd} add ${IPFW_allowlog} ah from any to any
-${fwcmd} add ${IPFW_allowlog} all from any to any
+ ${fwcmd} add 29900 ${IPFW_allowlog} tcp from any to any
+ ${fwcmd} add ${IPFW_allowlog} udp from any to any
+ ${fwcmd} add ${IPFW_allowlog} gre from any to any
+ ${fwcmd} add ${IPFW_allowlog} igmp from any to any
+ ${fwcmd} add ${IPFW_allowlog} l2tp from any to any
+ ${fwcmd} add ${IPFW_allowlog} esp from any to any
+ ${fwcmd} add ${IPFW_allowlog} ah from any to any
+ ${fwcmd} add ${IPFW_allowlog} all from any to any
 ########################
 fi
 
@@ -744,344 +509,316 @@ fi
 if [ "${IPFW_WAN_6}" == "1" ]; then
 ########################
 # All WANs IPv6 in
-if [ -n "${IPFW_oip_6}" ]; then
- ${fwcmd} add 9000 count ip6 from any to any via ${IPFW_oif} in
-# WAN1
- if [ -n "${IPFW_oip3_6}" ] || [ -n "${IPFW_oip2_6}" ]; then
-  ${fwcmd} add 9099 skipto 9300 all from any to any
- fi
-fi
-if [ -n "${IPFW_oip2_6}" ]; then
- ${fwcmd} add 9100 count ip6 from any to any via ${IPFW_oif2} in
-# WAN2
- if [ -n "${IPFW_oip3_6}" ]; then
-  ${fwcmd} add 9199 skipto 9300 all from any to any
- fi
-fi
-if [ -n "${IPFW_oip3_6}" ]; then
- ${fwcmd} add 9200 count ip6 from any to any via ${IPFW_oif3} in
-# WAN3
-fi
-${fwcmd} add 9300 ${IPFW_allow} ipv6-icmp from ::/128 to ff02::/16
-${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to fe80::/10
-${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to ff02::/16
-${fwcmd} add ${IPFW_allow} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136
-${fwcmd} add ${IPFW_allowlog} ipv6-icmp from any to any
-${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 546,547 to fe80::/10 546,547
-${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547
-${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355
-${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST6\) to any
-${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST_RMT6\) to any
-${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST_IMP6\) to any
-${fwcmd} add ${IPFW_denylog} ip6 from table\(BLOCKED_RANGES6\) to any
+ y=30000
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   ${fwcmd} add ${y} count ip6 from any to any via ${!k} in
+   if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
+    ${fwcmd} add skipto 31000 all from any to any
+   fi
+  fi
+  y=$(( ${y} + 10 ))
+ done
+ ${fwcmd} add 31000 ${IPFW_allow} ipv6-icmp from ::/128 to ff02::/16
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to fe80::/10
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to ff02::/16
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136
+ ${fwcmd} add ${IPFW_allowlog} ipv6-icmp from any to any
+ ${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 546,547 to fe80::/10 546,547
+ ${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547
+ ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355
+ ${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST6\) to any
+ ${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST_RMT6\) to any
+ ${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST_IMP6\) to any
+ ${fwcmd} add ${IPFW_denylog} ip6 from table\(BLOCKED_RANGES6\) to any
 # blocked WAN IN dstports (logging enabled)
-block_dstports "in6log" "${IPFW_wan6_in_dstports}"
+ block_dstports "in6log" "${IPFW_wan6_in_dstports}"
 # replies to allowed WAN OUT dstports
-for ports in $(array_groupby "${IPFW_wan6_out_allowed_udp}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} udp from any ${ports} to table\(OUT_RANGES6\) ${IPFW_unprivports}
- fi
-done
-for ports in $(array_groupby "${IPFW_wan6_out_allowed_tcp}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} tcp from any ${ports} to table\(OUT_RANGES6\) ${IPFW_unprivports}
- fi
-done
+ for ports in $(array_groupby "${IPFW_wan6_out_allowed_udp}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} udp from any ${ports} to table\(OUT_RANGES6\) ${IPFW_unprivports}
+  fi
+ done
+ for ports in $(array_groupby "${IPFW_wan6_out_allowed_tcp}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} tcp from any ${ports} to table\(OUT_RANGES6\) ${IPFW_unprivports}
+  fi
+ done
 # allowed WAN IN dstports
-i=0
-for protoport in ${PROTOPORT}; do
- protoip6=$(array_get "${PROTOIP6}" "${i}")
- if [ "${protoip6}" != "NONE" ]; then
-  protocol=$(array_get "${PROTOCOL}" "${i}")
-  protolog=$(array_get "${PROTOLOG}" "${i}")
-  protoaction=$(array_get "${PROTOACTION}" "${i}")
-  block_protocol "ipv6" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip6}" "allow"
- fi
- i=`expr ${i} + 1`
-done
-###
-for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} ip6 from any to any ${ports}
-  ${fwcmd} add ${IPFW_allow} ip6 from any ${ports} to any
- fi
-done
-###
-${fwcmd} add 9990 ${IPFW_allowlog} tcp from any to any
-${fwcmd} add ${IPFW_allowlog} udp from any to any
-${fwcmd} add ${IPFW_allowlog} all from any to any
-########################
-# All WANs IPv6 out
-if [ -n "${IPFW_oip_6}" ]; then
- ${fwcmd} add 11000 count ip6 from any to any via ${IPFW_oif} out
-# WAN1
- if [ -n "${IPFW_oip3_6}" ] || [ -n "${IPFW_oip2_6}" ]; then
-  ${fwcmd} add 11099 skipto 11300 all from any to any
- fi
-fi
-if [ -n "${IPFW_oip2_6}" ]; then
- ${fwcmd} add 11100 count ip6 from any to any via ${IPFW_oif2} out
-# WAN2
- if [ -n "${IPFW_oip3_6}" ]; then
-  ${fwcmd} add 11199 skipto 11300 all from any to any
- fi
-fi
-if [ -n "${IPFW_oip3_6}" ]; then
- ${fwcmd} add 11200 count ip6 from any to any via ${IPFW_oif3} out
-# WAN3
-fi
-${fwcmd} add 11300 ${IPFW_allow} ipv6-icmp from ::/128 to ff02::/16
-${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to fe80::/10
-${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to ff02::/16
-${fwcmd} add ${IPFW_allow} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136
-${fwcmd} add ${IPFW_allowlog} ipv6-icmp from any to any
-${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 546,547 to fe80::/10 546,547
-${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547
-${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355
-${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST6\)
-${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST_RMT6\)
-${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST_IMP6\)
-${fwcmd} add ${IPFW_denylog} ip6 from any to table\(BLOCKED_RANGES6\)
-# blocked WAN OUT dstports (logging enabled)
-block_dstports "out6log" "${IPFW_wan6_out_dstports}"
-#block_srchost "SWITCHES6"
-#block_srchost "CAMS6"
-#block_dsthost "<table_name>"
-#block_dsthost "<table_name>"
-# allowed WAN OUT dstports
-for ports in $(array_groupby "${IPFW_wan6_out_allowed_udp}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} udp from table\(OUT_RANGES6\) ${IPFW_unprivports} to any ${ports}
- fi
-done
-for ports in $(array_groupby "${IPFW_wan6_out_allowed_tcp}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} tcp from table\(OUT_RANGES6\) ${IPFW_unprivports} to any ${ports}
- fi
-done
-# replies to allowed WAN IN dstports
-i=0
-for protoport in ${PROTOPORT}; do
- protoip6=$(array_get "${PROTOIP6}" "${i}")
- if [ "${protoip6}" != "NONE" ]; then
-  protoaction=$(array_get "${PROTOACTION}" "${i}")
-  if [ "${protoaction}" != "deny" ]; then
+ i=0
+ for protoport in ${PROTOPORT}; do
+  protoip6=$(array_get "${PROTOIP6}" "${i}")
+  if [ "${protoip6}" != "NONE" ]; then
    protocol=$(array_get "${PROTOCOL}" "${i}")
    protolog=$(array_get "${PROTOLOG}" "${i}")
-   block_protocol "ipv6" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip6}" "allow"
+   protoaction=$(array_get "${PROTOACTION}" "${i}")
+   block_protocol "ipv6" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip6}" "allow"
   fi
- fi
- i=`expr ${i} + 1`
-done
+  i=`expr ${i} + 1`
+ done
 ###
-for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} ip6 from any to any ${ports}
-  ${fwcmd} add ${IPFW_allow} ip6 from any ${ports} to any
- fi
-done
+ for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} ip6 from any to any ${ports}
+   ${fwcmd} add ${IPFW_allow} ip6 from any ${ports} to any
+  fi
+ done
 ###
-${fwcmd} add 11990 ${IPFW_allowlog} tcp from any to any
-${fwcmd} add ${IPFW_allowlog} udp from any to any
-${fwcmd} add ${IPFW_allowlog} all from any to any
+ ${fwcmd} add 34900 ${IPFW_allowlog} tcp from any to any
+ ${fwcmd} add ${IPFW_allowlog} udp from any to any
+ ${fwcmd} add ${IPFW_allowlog} all from any to any
+########################
+# All WANs IPv6 out
+ y=35000
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}_6"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   ${fwcmd} add ${y} count ip6 from any to any via ${!k} out
+   if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
+    ${fwcmd} add skipto 36000 all from any to any
+   fi
+  fi
+  y=$(( ${y} + 10 ))
+ done
+ ${fwcmd} add 36000 ${IPFW_allow} ipv6-icmp from ::/128 to ff02::/16
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to fe80::/10
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from fe80::/10 to ff02::/16
+ ${fwcmd} add ${IPFW_allow} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136
+ ${fwcmd} add ${IPFW_allowlog} ipv6-icmp from any to any
+ ${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 546,547 to fe80::/10 546,547
+ ${fwcmd} add ${IPFW_allow} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547
+ ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355
+ ${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST6\)
+ ${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST_RMT6\)
+ ${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST_IMP6\)
+ ${fwcmd} add ${IPFW_denylog} ip6 from any to table\(BLOCKED_RANGES6\)
+# blocked WAN OUT dstports (logging enabled)
+ block_dstports "out6log" "${IPFW_wan6_out_dstports}"
+# block_srchost "SWITCHES6"
+# block_srchost "CAMS6"
+# block_dsthost "<table_name>"
+# block_dsthost "<table_name>"
+# allowed WAN OUT dstports
+ for ports in $(array_groupby "${IPFW_wan6_out_allowed_udp}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} udp from table\(OUT_RANGES6\) ${IPFW_unprivports} to any ${ports}
+  fi
+ done
+ for ports in $(array_groupby "${IPFW_wan6_out_allowed_tcp}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} tcp from table\(OUT_RANGES6\) ${IPFW_unprivports} to any ${ports}
+  fi
+ done
+# replies to allowed WAN IN dstports
+ i=0
+ for protoport in ${PROTOPORT}; do
+  protoip6=$(array_get "${PROTOIP6}" "${i}")
+  if [ "${protoip6}" != "NONE" ]; then
+   protoaction=$(array_get "${PROTOACTION}" "${i}")
+   if [ "${protoaction}" != "deny" ]; then
+    protocol=$(array_get "${PROTOCOL}" "${i}")
+    protolog=$(array_get "${PROTOLOG}" "${i}")
+    block_protocol "ipv6" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip6}" "allow"
+   fi
+  fi
+  i=`expr ${i} + 1`
+ done
+###
+ for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} ip6 from any to any ${ports}
+   ${fwcmd} add ${IPFW_allow} ip6 from any ${ports} to any
+  fi
+ done
+###
+ ${fwcmd} add 39900 ${IPFW_allowlog} tcp from any to any
+ ${fwcmd} add ${IPFW_allowlog} udp from any to any
+ ${fwcmd} add ${IPFW_allowlog} all from any to any
 ########################
 fi
 if [ "${IPFW_WAN_4}" == "1" ]; then
 ########################
 # All WANs IPv4 in
-if [ -n "${IPFW_oip}" ]; then
- ${fwcmd} add 13000 count ip4 from any to any via ${IPFW_oif} in
-# WAN1
- if [ -n "${IPFW_oip3}" ] || [ -n "${IPFW_oip2}" ]; then
-  ${fwcmd} add 13099 skipto 13300 all from any to any
- fi
-fi
-if [ -n "${IPFW_oip2}" ]; then
- ${fwcmd} add 13100 count ip4 from any to any via ${IPFW_oif2} in
-# WAN2
- if [ -n "${IPFW_oip3}" ]; then
-  ${fwcmd} add 13199 skipto 13300 all from any to any
- fi
-fi
-if [ -n "${IPFW_oip3}" ]; then
- ${fwcmd} add 13200 count ip4 from any to any via ${IPFW_oif3} in
-# WAN3
-fi
-${fwcmd} add 13300 ${IPFW_deny} ip4 from table\(BLACKLIST\) to any
-${fwcmd} add ${IPFW_deny} ip4 from table\(BLACKLIST_RMT\) to any
-${fwcmd} add ${IPFW_deny} ip4 from table\(BLACKLIST_IMP\) to any
-${fwcmd} add ${IPFW_deny} igmp from any to any
-${fwcmd} add ${IPFW_denylog} ip4 from table\(BLOCKED_RANGES\) to any
+ y=40000
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   ${fwcmd} add ${y} count ip4 from any to any via ${!k} in
+   if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
+    ${fwcmd} add skipto 41000 all from any to any
+   fi
+  fi
+  y=$(( ${y} + 10 ))
+ done
+ ${fwcmd} add 41000 ${IPFW_deny} ip4 from table\(BLACKLIST\) to any
+ ${fwcmd} add ${IPFW_deny} ip4 from table\(BLACKLIST_RMT\) to any
+ ${fwcmd} add ${IPFW_deny} ip4 from table\(BLACKLIST_IMP\) to any
+ ${fwcmd} add ${IPFW_deny} igmp from any to any
+ ${fwcmd} add ${IPFW_denylog} ip4 from table\(BLOCKED_RANGES\) to any
 # blocked WAN IN dstports (logging enabled)
-block_dstports "in4log" "${IPFW_wan4_in_dstports}"
+ block_dstports "in4log" "${IPFW_wan4_in_dstports}"
 # blocked WAN IN dstports
-i=0
-for protoport in ${PROTOPORT}; do
- protoip4=$(array_get "${PROTOIP4}" "${i}")
- if [ "${protoip4}" != "NONE" ]; then
-  protoaction=$(array_get "${PROTOACTION}" "${i}")
-  if [ "${protoaction}" = "deny" ]; then
-   protocol=$(array_get "${PROTOCOL}" "${i}")
-   protolog=$(array_get "${PROTOLOG}" "${i}")
-   block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "deny"
+ i=0
+ for protoport in ${PROTOPORT}; do
+  protoip4=$(array_get "${PROTOIP4}" "${i}")
+  if [ "${protoip4}" != "NONE" ]; then
+   protoaction=$(array_get "${PROTOACTION}" "${i}")
+   if [ "${protoaction}" = "deny" ]; then
+    protocol=$(array_get "${PROTOCOL}" "${i}")
+    protolog=$(array_get "${PROTOLOG}" "${i}")
+    block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "deny"
+   fi
   fi
- fi
- i=`expr ${i} + 1`
-done
-i=0
-for protoport in ${PROTOPORT}; do
- protoip4=$(array_get "${PROTOIP4}" "${i}")
- if [ "${protoip4}" != "NONE" ]; then
-  protoaction=$(array_get "${PROTOACTION}" "${i}")
-  if [ "${protoaction}" != "deny" ]; then
-   protocol=$(array_get "${PROTOCOL}" "${i}")
-   protolog=$(array_get "${PROTOLOG}" "${i}")
-   block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "denyonly"
+  i=`expr ${i} + 1`
+ done
+ i=0
+ for protoport in ${PROTOPORT}; do
+  protoip4=$(array_get "${PROTOIP4}" "${i}")
+  if [ "${protoip4}" != "NONE" ]; then
+   protoaction=$(array_get "${PROTOACTION}" "${i}")
+   if [ "${protoaction}" != "deny" ]; then
+    protocol=$(array_get "${PROTOCOL}" "${i}")
+    protolog=$(array_get "${PROTOLOG}" "${i}")
+    block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "denyonly"
+   fi
   fi
- fi
- i=`expr ${i} + 1`
-done
+  i=`expr ${i} + 1`
+ done
 # NAT
-if [ -n "${IPFW_nat}" ]; then
- ${fwcmd} add nat 1 ip4 from any to any via ${IPFW_oif}
-fi
-if [ -n "${IPFW_nat2}" ]; then
- ${fwcmd} add nat 2 ip4 from any to any via ${IPFW_oif2}
-fi
-if [ -n "${IPFW_nat3}" ]; then
- ${fwcmd} add nat 3 ip4 from any to any via ${IPFW_oif3}
-fi
-${fwcmd} add ${IPFW_allow} icmp from any to any
-# replies to allowed WAN OUT dstports
-for ports in $(array_groupby "${IPFW_wan4_out_allowed_udp}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} udp from any ${ports} to table\(OUT_RANGES\) ${IPFW_unprivports}
- fi
-done
-for ports in $(array_groupby "${IPFW_wan4_out_allowed_tcp}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} tcp from any ${ports} to table\(OUT_RANGES\) ${IPFW_unprivports}
- fi
-done
-# allowed WAN IN dstports
-i=0
-for protoport in ${PROTOPORT}; do
- protoip4=$(array_get "${PROTOIP4}" "${i}")
- if [ "${protoip4}" != "NONE" ]; then
-  protoaction=$(array_get "${PROTOACTION}" "${i}")
-  if [ "${protoaction}" != "deny" ]; then
-   protocol=$(array_get "${PROTOCOL}" "${i}")
-   protolog=$(array_get "${PROTOLOG}" "${i}")
-   block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "nodeny"
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_nat${i}"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   ${fwcmd} add nat ${i} ip4 from any to any via ${!k}
   fi
- fi
- i=`expr ${i} + 1`
-done
+ done
+ ${fwcmd} add ${IPFW_allow} icmp from any to any
+# replies to allowed WAN OUT dstports
+ for ports in $(array_groupby "${IPFW_wan4_out_allowed_udp}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} udp from any ${ports} to table\(OUT_RANGES\) ${IPFW_unprivports}
+  fi
+ done
+ for ports in $(array_groupby "${IPFW_wan4_out_allowed_tcp}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} tcp from any ${ports} to table\(OUT_RANGES\) ${IPFW_unprivports}
+  fi
+ done
+# allowed WAN IN dstports
+ i=0
+ for protoport in ${PROTOPORT}; do
+  protoip4=$(array_get "${PROTOIP4}" "${i}")
+  if [ "${protoip4}" != "NONE" ]; then
+   protoaction=$(array_get "${PROTOACTION}" "${i}")
+   if [ "${protoaction}" != "deny" ]; then
+    protocol=$(array_get "${PROTOCOL}" "${i}")
+    protolog=$(array_get "${PROTOLOG}" "${i}")
+    block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "nodeny"
+   fi
+  fi
+  i=`expr ${i} + 1`
+ done
 ###
-for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} ip4 from any to any ${ports}
-  ${fwcmd} add ${IPFW_allow} ip4 from any ${ports} to any
- fi
-done
+ for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} ip4 from any to any ${ports}
+   ${fwcmd} add ${IPFW_allow} ip4 from any ${ports} to any
+  fi
+ done
 ###
-${fwcmd} add 13990 ${IPFW_allowlog} sctp from any to any
-${fwcmd} add ${IPFW_allowlog} tcp from any to any
-${fwcmd} add ${IPFW_allowlog} udp from any to any
-${fwcmd} add ${IPFW_allowlog} all from any to any
+ ${fwcmd} add 44900 ${IPFW_allowlog} sctp from any to any
+ ${fwcmd} add ${IPFW_allowlog} tcp from any to any
+ ${fwcmd} add ${IPFW_allowlog} udp from any to any
+ ${fwcmd} add ${IPFW_allowlog} all from any to any
 ########################
 # All WANs IPv4 out
-if [ -n "${IPFW_oip}" ]; then
- ${fwcmd} add 15000 count ip4 from any to any via ${IPFW_oif} out
-# WAN1
- if [ -n "${IPFW_oip3}" ] || [ -n "${IPFW_oip2}" ]; then
-  ${fwcmd} add 15099 skipto 15300 all from any to any
- fi
-fi
-if [ -n "${IPFW_oip2}" ]; then
- ${fwcmd} add 15100 count ip4 from any to any via ${IPFW_oif2} out
-# WAN2
- if [ -n "${IPFW_oip3}" ]; then
-  ${fwcmd} add 15199 skipto 15300 all from any to any
- fi
-fi
-if [ -n "${IPFW_oip3}" ]; then
- ${fwcmd} add 15200 count ip4 from any to any via ${IPFW_oif3} out
-# WAN3
-fi
-${fwcmd} add 15300 ${IPFW_deny} ip4 from any to table\(BLACKLIST\)
-${fwcmd} add ${IPFW_deny} ip4 from any to table\(BLACKLIST_RMT\)
-${fwcmd} add ${IPFW_deny} ip4 from any to table\(BLACKLIST_IMP\)
-${fwcmd} add ${IPFW_deny} igmp from any to any
-${fwcmd} add ${IPFW_denylog} ip4 from any to table\(BLOCKED_RANGES\)
+ y=45000
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_oip${i}"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   ${fwcmd} add ${y} count ip4 from any to any via ${!k} out
+   if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
+    ${fwcmd} add skipto 46000 all from any to any
+   fi
+  fi
+  y=$(( ${y} + 10 ))
+ done
+ ${fwcmd} add 46000 ${IPFW_deny} ip4 from any to table\(BLACKLIST\)
+ ${fwcmd} add ${IPFW_deny} ip4 from any to table\(BLACKLIST_RMT\)
+ ${fwcmd} add ${IPFW_deny} ip4 from any to table\(BLACKLIST_IMP\)
+ ${fwcmd} add ${IPFW_deny} igmp from any to any
+ ${fwcmd} add ${IPFW_denylog} ip4 from any to table\(BLOCKED_RANGES\)
 # blocked WAN OUT dstports (logging enabled)
-block_dstports "out4log" "${IPFW_wan4_out_dstports}"
-block_srchost "SWITCHES"
-block_srchost "CAMS"
-#block_dsthost "<table_name>"
-#block_dsthost "<table_name>"
+ block_dstports "out4log" "${IPFW_wan4_out_dstports}"
+ block_srchost "SWITCHES"
+ block_srchost "CAMS"
+# block_dsthost "<table_name>"
+# block_dsthost "<table_name>"
 # blocked WAN OUT dstports
-i=0
-for protoport in ${PROTOPORT}; do
- protoip4=$(array_get "${PROTOIP4}" "${i}")
- if [ "${protoip4}" != "NONE" ]; then
-  protoaction=$(array_get "${PROTOACTION}" "${i}")
-  if [ "${protoaction}" != "deny" ]; then
-   protocol=$(array_get "${PROTOCOL}" "${i}")
-   protolog=$(array_get "${PROTOLOG}" "${i}")
-   block_protocol "ipv4" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "denyonly"
+ i=0
+ for protoport in ${PROTOPORT}; do
+  protoip4=$(array_get "${PROTOIP4}" "${i}")
+  if [ "${protoip4}" != "NONE" ]; then
+   protoaction=$(array_get "${PROTOACTION}" "${i}")
+   if [ "${protoaction}" != "deny" ]; then
+    protocol=$(array_get "${PROTOCOL}" "${i}")
+    protolog=$(array_get "${PROTOLOG}" "${i}")
+    block_protocol "ipv4" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "denyonly"
+   fi
   fi
- fi
- i=`expr ${i} + 1`
-done
+  i=`expr ${i} + 1`
+ done
 # NAT
-if [ -n "${IPFW_nat}" ]; then
- ${fwcmd} add nat 1 ip4 from any to any via ${IPFW_oif}
-fi
-if [ -n "${IPFW_nat2}" ]; then
- ${fwcmd} add nat 2 ip4 from any to any via ${IPFW_oif2}
-fi
-if [ -n "${IPFW_nat3}" ]; then
- ${fwcmd} add nat 3 ip4 from any to any via ${IPFW_oif3}
-fi
-${fwcmd} add ${IPFW_allow} icmp from any to any
-# allowed WAN OUT dstports
-for ports in $(array_groupby "${IPFW_wan4_out_allowed_udp}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} udp from table\(OUT_RANGES\) ${IPFW_unprivports} to any ${ports}
- fi
-done
-for ports in $(array_groupby "${IPFW_wan4_out_allowed_tcp}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} tcp from table\(OUT_RANGES\) ${IPFW_unprivports} to any ${ports}
- fi
-done
-# replies to allowed WAN IN dstports
-i=0
-for protoport in ${PROTOPORT}; do
- protoip4=$(array_get "${PROTOIP4}" "${i}")
- if [ "${protoip4}" != "NONE" ]; then
-  protoaction=$(array_get "${PROTOACTION}" "${i}")
-  if [ "${protoaction}" != "deny" ]; then
-   protocol=$(array_get "${PROTOCOL}" "${i}")
-   protolog=$(array_get "${PROTOLOG}" "${i}")
-   block_protocol "ipv4" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "nodeny"
+ for i in "${IPFW_WANS_list}"; do
+  j="IPFW_nat${i}"
+  if [ -n "${!j}" ]; then
+   k="IPFW_oif${i}"
+   ${fwcmd} add nat ${i} ip4 from any to any via ${!k}
   fi
- fi
- i=`expr ${i} + 1`
-done
+ done
+ ${fwcmd} add ${IPFW_allow} icmp from any to any
+# allowed WAN OUT dstports
+ for ports in $(array_groupby "${IPFW_wan4_out_allowed_udp}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} udp from table\(OUT_RANGES\) ${IPFW_unprivports} to any ${ports}
+  fi
+ done
+ for ports in $(array_groupby "${IPFW_wan4_out_allowed_tcp}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} tcp from table\(OUT_RANGES\) ${IPFW_unprivports} to any ${ports}
+  fi
+ done
+# replies to allowed WAN IN dstports
+ i=0
+ for protoport in ${PROTOPORT}; do
+  protoip4=$(array_get "${PROTOIP4}" "${i}")
+  if [ "${protoip4}" != "NONE" ]; then
+   protoaction=$(array_get "${PROTOACTION}" "${i}")
+   if [ "${protoaction}" != "deny" ]; then
+    protocol=$(array_get "${PROTOCOL}" "${i}")
+    protolog=$(array_get "${PROTOLOG}" "${i}")
+    block_protocol "ipv4" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "nodeny"
+   fi
+  fi
+  i=`expr ${i} + 1`
+ done
 ###
-for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
- if [ -n "${ports}" ]; then
-  ${fwcmd} add ${IPFW_allow} ip4 from any to any ${ports}
-  ${fwcmd} add ${IPFW_allow} ip4 from any ${ports} to any
- fi
-done
+ for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
+  if [ -n "${ports}" ]; then
+   ${fwcmd} add ${IPFW_allow} ip4 from any to any ${ports}
+   ${fwcmd} add ${IPFW_allow} ip4 from any ${ports} to any
+  fi
+ done
 ###
-${fwcmd} add 15990 ${IPFW_allowlog} tcp from any to any
-${fwcmd} add ${IPFW_allowlog} sctp from any to any
-${fwcmd} add ${IPFW_allowlog} udp from any to any
-${fwcmd} add ${IPFW_allowlog} all from any to any
+ ${fwcmd} add 49900 ${IPFW_allowlog} tcp from any to any
+ ${fwcmd} add ${IPFW_allowlog} sctp from any to any
+ ${fwcmd} add ${IPFW_allowlog} udp from any to any
+ ${fwcmd} add ${IPFW_allowlog} all from any to any
 ########################
 fi
 
