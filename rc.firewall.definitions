@@ -291,7 +291,14 @@ define_multiwan (){
  esac
  if [ -n "${cmd1}" ]; then
   k="IPFW_ofib${3}"
-  ${fwcmd} add set 0 setfib ${!k} ${cmd1} ${wan} ${cmd2}
+  if [ -n "${!k}" ]; then
+   ${fwcmd} add set 0 setfib ${!k} ${cmd1} ${wan} ${cmd2}
+  else
+   k="IPFW_ofib${IPFW_WANS}"
+   if [ -n "${!k}" ]; then
+    ${fwcmd} add set 0 setfib ${!k} ${cmd1} ${wan} ${cmd2}
+   fi
+  fi
   for i in ${IPFW_WANS_list}; do
    j="IPFW_oip${i}"
    if [ -n "${!j}" ]; then
@@ -304,6 +311,7 @@ define_multiwan (){
      l="IPFW_oip${l}"
      next="${!l}"
     fi
+echo "${fwcmd} add set ${i} setfib ${next} ${cmd1} ${wan} ${cmd2} fib ${!k}"
     ${fwcmd} add set ${i} setfib ${next} ${cmd1} ${wan} ${cmd2} fib ${!k}  # WAN if down
    fi
   done
