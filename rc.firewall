@@ -478,8 +478,6 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
     define_multiwan "srchost" "WAN${i}" "${i}"
     k="IPFW_ofib${i}"
     l="IPFW_onet${i}"
-echo "${i} ${!j}"
-echo "${fwcmd} add setfib ${!k} all from any to ${!l}"
     ${fwcmd} add setfib ${!k} all from any to ${!l}
    fi
   done
