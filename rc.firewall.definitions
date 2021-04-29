@@ -177,7 +177,7 @@ block_protocol (){
 }
 
 
-# define_multiwan <type> <port/host> <multiwan_model>
+# define_multiwan <type> <port/host> <preferred_wan>
 # type = "port","srchost","dsthost"
 define_multiwan (){
  local wan=""
@@ -209,47 +209,23 @@ define_multiwan (){
  ;;
  esac
  if [ -n "${cmd1}" ]; then
-  case ${3} in
-  012)
-        ${fwcmd} add set 0 setfib 0 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-        ${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-        ${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-        ${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
-        ;;
-  021)
-        ${fwcmd} add set 0 setfib 0 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-        ${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-        ${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
-        ${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-        ;;
-  120)
-        ${fwcmd} add set 0 setfib 1 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-        ${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-        ${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
-        ${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-        ;;
-  102)
-        ${fwcmd} add set 0 setfib 1 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-        ${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-        ${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-        ${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
-        ;;
-  210)
-        ${fwcmd} add set 0 setfib 2 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-        ${fwcmd} add set 3 setfib 1 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
-        ${fwcmd} add set 2 setfib 0 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-        ${fwcmd} add set 1 setfib 2 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-        ;;
-  201)
-        ${fwcmd} add set 0 setfib 2 ${cmd1} ${wan} ${cmd2}        # All WANs ok
-        ${fwcmd} add set 3 setfib 0 ${cmd1} ${wan} ${cmd2} fib 2  # WAN3 down
-        ${fwcmd} add set 1 setfib 1 ${cmd1} ${wan} ${cmd2} fib 0  # WAN1 down
-        ${fwcmd} add set 2 setfib 2 ${cmd1} ${wan} ${cmd2} fib 1  # WAN2 down
-        ;;
-  *)
-        echo "Unknown define_multiwan model."
-        ;;
-  esac
+  k="IPFW_ofib${3}"
+  ${fwcmd} add set 0 setfib ${!k} ${cmd1} ${wan} ${cmd2}
+  for i in ${IPFW_WANS_list}; do
+   j="IPFW_oip${i}"
+   if [ -n "${!j}" ]; then
+    k="IPFW_ofib${i}"
+    if [ x"${i}" == x"${IPFW_WANS}" ]; then
+     l="IPFW_oipl"
+     next="${!l}"
+    else
+     l=$(( ${i} + 1 ))
+     l="IPFW_oip${l}"
+     next="${!l}"
+    fi
+    ${fwcmd} add set ${i} setfib ${next} ${cmd1} ${wan} ${cmd2} fib ${!k}  # WAN if down
+   fi
+  done
  fi
 }
 
@@ -274,27 +250,27 @@ prepare_shaping (){
 # prepare_tables   ### no params ###
 prepare_tables (){
  ${fwcmd} -q table BLACKLIST create > /dev/null 2> /dev/null
- ${fwcmd} -q table BLACKLIST flush
+ ${fwcmd} -q table BLACKLIST flush > /dev/null 2> /dev/null
  tail -n +2 /etc/rc.firewall.blacklist | xargs ipfw -q table BLACKLIST add
 
  ${fwcmd} -q table BLACKLIST6 create > /dev/null 2> /dev/null
- ${fwcmd} -q table BLACKLIST6 flush
+ ${fwcmd} -q table BLACKLIST6 flush > /dev/null 2> /dev/null
  tail -n +2 /etc/rc.firewall.blacklist6 | xargs ipfw -q table BLACKLIST6 add
 
  ${fwcmd} -q table BLACKLIST_RMT create > /dev/null 2> /dev/null
- ${fwcmd} -q table BLACKLIST_RMT flush
+ ${fwcmd} -q table BLACKLIST_RMT flush > /dev/null 2> /dev/null
  tail -n +2 /etc/rc.firewall.blacklist_rmt | xargs ipfw -q table BLACKLIST_RMT add
 
  ${fwcmd} -q table BLACKLIST_RMT6 create > /dev/null 2> /dev/null
- ${fwcmd} -q table BLACKLIST_RMT6 flush
+ ${fwcmd} -q table BLACKLIST_RMT6 flush > /dev/null 2> /dev/null
  tail -n +2 /etc/rc.firewall.blacklist_rmt6 | xargs ipfw -q table BLACKLIST_RMT6 add
 
  ${fwcmd} -q table BLACKLIST_IMP create > /dev/null 2> /dev/null
- ${fwcmd} -q table BLACKLIST_IMP flush
+ ${fwcmd} -q table BLACKLIST_IMP flush > /dev/null 2> /dev/null
  tail -n +2 /etc/rc.firewall.blacklist_imp | xargs ipfw -q table BLACKLIST_IMP add
 
  ${fwcmd} -q table BLACKLIST_IMP6 create > /dev/null 2> /dev/null
- ${fwcmd} -q table BLACKLIST_IMP6 flush
+ ${fwcmd} -q table BLACKLIST_IMP6 flush > /dev/null 2> /dev/null
  tail -n +2 /etc/rc.firewall.blacklist_imp6 | xargs ipfw -q table BLACKLIST_IMP6 add
 }
 
