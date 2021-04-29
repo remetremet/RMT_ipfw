@@ -1,4 +1,6 @@
-#!/usr/lcoal/bin/bash
+#!/usr/local/bin/bash
+
+fwcmd="/sbin/ipfw"
 
 # definitions
 IPFW_unprivports="1024-65535"
