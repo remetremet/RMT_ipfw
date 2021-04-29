@@ -488,6 +488,7 @@ for i in ${IPFW_LANS_list}; do
 done
 
 if [ "${XYZ}" != "info" ]; then
+fwcmd="${fwcmd:-/sbin/ipfw}"
 ###########################
 # Global (mandatory) tables
 ###########################
