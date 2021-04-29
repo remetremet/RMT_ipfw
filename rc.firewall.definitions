@@ -304,11 +304,11 @@ define_multiwan (){
    if [ -n "${!j}" ]; then
     k="IPFW_ofib${i}"
     if [ x"${i}" == x"${IPFW_WANS}" ]; then
-     l="IPFW_oipl"
+     l="IPFW_ofibl"
      next="${!l}"
     else
      l=$(( ${i} + 1 ))
-     l="IPFW_oip${l}"
+     l="IPFW_ofib${l}"
      next="${!l}"
     fi
 echo "${fwcmd} add set ${i} setfib ${next} ${cmd1} ${wan} ${cmd2} fib ${!k}"
