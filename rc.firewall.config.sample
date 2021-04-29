@@ -492,6 +492,7 @@ fwcmd="${fwcmd:-/sbin/ipfw}"
 ###########################
 # Global (mandatory) tables
 ###########################
+
 # Blocked ranges on WAN interfaces
 #${fwcmd} -q table BLOCKED_RANGES add 192.168.0.0/16
 #${fwcmd} -q table BLOCKED_RANGES add 172.16.0.0/12
