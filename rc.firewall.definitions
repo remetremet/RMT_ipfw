@@ -99,6 +99,7 @@ IPFW_known_ports="${IPFW_known_ports} 33322 40126-40128 48822"
 block_dstports (){
  local cmd=""
  local cmd2=""
+ local ports=""
  case $1 in
  in4)
         cmd="${fwcmd} add ${IPFW_deny} ip4 from any to any"
@@ -157,6 +158,7 @@ block_dsthost (){
 
 # port_allow <tcp/udp> <in/out> <ports>
 port_allow (){
+ local ports=""
  for ports in $(array_groupby "$3" "16"); do
   if [ -n "${ports}" ]; then
    if [ x"$2" == x"in" ]; then
@@ -264,6 +266,11 @@ define_multiwan (){
  local wan=""
  local cmd1=""
  local cmd2=""
+ local i=""
+ local j=""
+ local k=""
+ local l=""
+
  case $1 in
  port)
         cmd1="all from"
@@ -387,6 +394,7 @@ array_length() {
 array_get() {
  local output=""
  local i=0
+ local ix=0
  for ix in $1; do
   if [ x"$2" = x"${i}" ]; then
    output=${ix}
@@ -404,6 +412,7 @@ array_groupby() {
  local output=""
  local i=0
  local part=""
+ local port=""
  local max=$2
  max=$(( ${max} - 1 ))
  for port in $1; do
@@ -422,5 +431,4 @@ array_groupby() {
  fi
  echo "${output}"
 }
-
 
