@@ -9,5 +9,6 @@ chmod 755 /var/db/RMT_ipfw/*.sh
 cp /var/db/RMT_ipfw/rc.firewall /etc/
 chmod 755 /etc/rc.firewall
 cp /var/db/RMT_ipfw/rc.firewall.definitions /etc/
-#cp /var/db/RMT_ipfw/rc.firewall.config /etc/
-chmod 755 /etc/rc.firewall.*
+chmod 755 /etc/rc.firewall.definitions
+cp /var/db/RMT_ipfw/rc.firewall.config.sample /etc/
+chmod 755 /etc/rc.firewall.config.sample
