@@ -3,11 +3,11 @@
 BASEPATH="/var/db/RMT_ipfw"
 
 # Synchronize scripts from github to local repo
-cd "${BASEPATH}"
+cd "${BASEPATH}/github"
 git pull origin master
 
 # Copy scripts from local repo to working directory (/etc)
-cp -R "${BASEPATH}/github/*.sh" "${BASEPATH}/"
+cp -R ${BASEPATH}/github/*.sh "${BASEPATH}/"
 chmod 755 ${BASEPATH}/*.sh
 cp "${BASEPATH}/github/rc.firewall" /etc/
 chmod 755 /etc/rc.firewall
