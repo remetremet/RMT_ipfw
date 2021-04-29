@@ -13,8 +13,87 @@ IPFW_allowlog="allow log ${IPFW_logamount}"
 IPFW_keep="keep-state"
 IPFW_keepsetup="keep-state setup"
 
+# defauls (to be overriden in config)
+IPFW_statefull="0"
+IPFW_multiwan="0"
+
+###########################
+# Global (mandatory) tables
+###########################
+${fwcmd} -q table LOCALHOST create > /dev/null 2> /dev/null
+${fwcmd} -q table LOCALHOST flush > /dev/null 2> /dev/null
+${fwcmd} -q table LOCALHOST add 127.0.0.1/32 0
+${fwcmd} -q table LOCALHOST6 create > /dev/null 2> /dev/null
+${fwcmd} -q table LOCALHOST6 flush > /dev/null 2> /dev/null
+${fwcmd} -q table LOCALHOST6 add ::1/128 0
+###
+${fwcmd} -q table PRIVATE create > /dev/null 2> /dev/null
+${fwcmd} -q table PRIVATE flush > /dev/null 2> /dev/null
+${fwcmd} -q table PRIVATE add 192.168.0.0/16 0
+${fwcmd} -q table PRIVATE add 10.0.0.0/8 0
+${fwcmd} -q table PRIVATE add 172.16.0.0/12 0
+###
+${fwcmd} -q table BLOCKED_RANGES create > /dev/null 2> /dev/null
+${fwcmd} -q table BLOCKED_RANGES flush > /dev/null 2> /dev/null
+${fwcmd} -q table BLOCKED_RANGES add 0.0.0.0/8
+${fwcmd} -q table BLOCKED_RANGES add 100.64.0.0/10   # Shared
+${fwcmd} -q table BLOCKED_RANGES add 169.254.0.0/16  # APIPA
+${fwcmd} -q table BLOCKED_RANGES add 192.0.0.0/24    # IANA IPv4
+${fwcmd} -q table BLOCKED_RANGES add 192.0.2.0/24    # TEST-NET-1
+${fwcmd} -q table BLOCKED_RANGES add 192.88.99.0/24  # 6-to-4
+${fwcmd} -q table BLOCKED_RANGES add 198.18.0.0/15   # Benchmark
+${fwcmd} -q table BLOCKED_RANGES add 198.51.100.0/24 # TEST-NET-2
+${fwcmd} -q table BLOCKED_RANGES add 203.0.113.0/24  # TEST-NET-3
+${fwcmd} -q table BLOCKED_RANGES add 224.0.0.0/24
+${fwcmd} -q table BLOCKED_RANGES add 240.0.0.0/4
+###
+if [ x"$ipv6_available" == x"0" ]; then
+ ${fwcmd} -q table BLOCKED_RANGES6 create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLOCKED_RANGES6 flush > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:ac10::/44
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001::/40
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:a9fe::/48
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:c000:200::/56
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:e000::/56
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:f000::/36
+fi
+###
+${fwcmd} -q table LOCAL_RANGES create > /dev/null 2> /dev/null
+${fwcmd} -q table LOCAL_RANGES flush > /dev/null 2> /dev/null
+###
+if [ x"$ipv6_available" == x"0" ]; then
+ ${fwcmd} -q table LOCAL_RANGES6 create > /dev/null 2> /dev/null
+ ${fwcmd} -q table LOCAL_RANGES6 flush > /dev/null 2> /dev/null
+fi
+###
+${fwcmd} -q table OUT_RANGES create > /dev/null 2> /dev/null
+${fwcmd} -q table OUT_RANGES flush > /dev/null 2> /dev/null
+###
+if [ x"$ipv6_available" == x"0" ]; then
+ ${fwcmd} -q table OUT_RANGES6 create > /dev/null 2> /dev/null
+ ${fwcmd} -q table OUT_RANGES6 flush > /dev/null 2> /dev/null
+fi
+###
+${fwcmd} -q table TRUSTED create > /dev/null 2> /dev/null
+${fwcmd} -q table TRUSTED flush > /dev/null 2> /dev/null
+###
+${fwcmd} -q table TRUSTED6 create > /dev/null 2> /dev/null
+${fwcmd} -q table TRUSTED6 flush > /dev/null 2> /dev/null
+###
+
+IPFW_known_ports=""
+IPFW_known_ports="${IPFW_known_ports} 20 21 22 23 25 53 67 68 69 80 81 88 110 111 113 123 135 137 138 139 143 161"
+IPFW_known_ports="${IPFW_known_ports} 443 445 465 521 546 547 554 587 777 853 873 953 990 993 995"
+IPFW_known_ports="${IPFW_known_ports} 1080 1194 1433 1434 1723 1883 1900 3306 3307 3333 3389 3478 4021 4025"
+IPFW_known_ports="${IPFW_known_ports} 5000 5001 5060 5061 5201 5190 5222 5223 5228 5432 5514 5672 5673 5678 5900 5901 6789 7275 7276 7777"
+IPFW_known_ports="${IPFW_known_ports} 8000 8080 8081 8086 8090 8181 8291 8292 8443 8843 8880 8883 8888 9000 9090 9100 9443"
+IPFW_known_ports="${IPFW_known_ports} 10001 10050 10051 10052 15672"
+IPFW_known_ports="${IPFW_known_ports} 33322 40126-40128 48822"
 
 
+###########################
+# Functions
+###########################
 # block_ports <type> <port_list>
 # type = "in4","in6","in4l","in6l","out4","out6","out4l","out6l"
 block_dstports (){
@@ -253,26 +332,32 @@ prepare_shaping (){
 prepare_tables (){
  ${fwcmd} -q table BLACKLIST create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST flush > /dev/null 2> /dev/null
+ touch /etc/rc.firewall.blacklist
  tail -n +2 /etc/rc.firewall.blacklist | xargs ipfw -q table BLACKLIST add
 
  ${fwcmd} -q table BLACKLIST6 create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST6 flush > /dev/null 2> /dev/null
+ touch /etc/rc.firewall.blacklist6
  tail -n +2 /etc/rc.firewall.blacklist6 | xargs ipfw -q table BLACKLIST6 add
 
  ${fwcmd} -q table BLACKLIST_RMT create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_RMT flush > /dev/null 2> /dev/null
+ touch /etc/rc.firewall.blacklist_rmt
  tail -n +2 /etc/rc.firewall.blacklist_rmt | xargs ipfw -q table BLACKLIST_RMT add
 
  ${fwcmd} -q table BLACKLIST_RMT6 create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_RMT6 flush > /dev/null 2> /dev/null
+ touch /etc/rc.firewall.blacklist_rmt6
  tail -n +2 /etc/rc.firewall.blacklist_rmt6 | xargs ipfw -q table BLACKLIST_RMT6 add
 
  ${fwcmd} -q table BLACKLIST_IMP create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_IMP flush > /dev/null 2> /dev/null
+ touch /etc/rc.firewall.blacklist_imp
  tail -n +2 /etc/rc.firewall.blacklist_imp | xargs ipfw -q table BLACKLIST_IMP add
 
  ${fwcmd} -q table BLACKLIST_IMP6 create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_IMP6 flush > /dev/null 2> /dev/null
+ touch /etc/rc.firewall.blacklist_imp6
  tail -n +2 /etc/rc.firewall.blacklist_imp6 | xargs ipfw -q table BLACKLIST_IMP6 add
 }
 
