@@ -9,4 +9,5 @@ List of functions, scripts and ideas to include:
 **Multiple WAN**|easy configuration|script+settings|waiting
 **Dynamic IP addresses**|dynamic IP addresses support|script+settings|waiting
 **PPPoE**|PPoE support|script+settings|waiting
+**DMZ**|DMZ (predefined LAN settings)|script+settings|maybe
 
