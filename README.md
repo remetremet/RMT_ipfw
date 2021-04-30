@@ -1,5 +1,5 @@
 # RMT_ipfw
-Automated FreeBSD IPFW2 (up to 20x WAN, up to 20 xLAN, NAT, QoS, traffic shaping, dualstack, router, endpoint, VPN)
+Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping, dualstack, router, endpoint, VPN)
 
 - Statefull/Stateless firewall
 - Multiple WANs (FreeBSD FIBs)
