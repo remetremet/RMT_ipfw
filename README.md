@@ -16,6 +16,7 @@ Requirements
 - `bash`
 - FreeBSD IPFW2 (incl. NAT)
 - FreeBSD 11.0+
+- use [tweaks](tweaks) to set and tune network subsystem
 
 
 ![license-image](https://img.shields.io/github/license/remetremet/RMT_ipfw?style=plastic)
