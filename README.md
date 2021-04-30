@@ -1,18 +1,20 @@
 # RMT_ipfw
-Automated FreeBSD IPFW2 (up to 20xWAN, up to 20xLAN, NAT, dualstack, router, endpoint, VPN)
+Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping, dualstack, router, endpoint, VPN)
 
 - Statefull/Stateless firewall
 - Multiple WANs (FreeBSD FIBs)
 - Multiple LANs (incl. VLANs)
 - IPv6/IPv4
-- Host and port based
+- Host, protocol and port based
 - Failover / Load balancing of multiple WANs
+- IP blacklist (IPv4 and IPv6) integration
+- Traffic stats counting (for Munin, Zabbix, Nagios, etc. monitoring)
 
 
 Requirements
 ---
 - `bash`
-- FreeBSD IPFW2
+- FreeBSD IPFW2 (incl. NAT)
 - FreeBSD 11.0+
 
 
