@@ -7,6 +7,8 @@ Automated FreeBSD IPFW2 (up to 20x WAN, up to 20 xLAN, NAT, QoS, traffic shaping
 - IPv6/IPv4
 - Host, protocol and port based
 - Failover / Load balancing of multiple WANs
+- IP blacklist (IPv4 and IPv6) integration
+- Traffic stats counting (for Munin, Zabbix, Nagios, etc. monitoring)
 
 
 Requirements
