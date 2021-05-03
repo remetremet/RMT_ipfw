@@ -461,23 +461,26 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
  ${fwcmd} add ${IPFW_allow} ip4 from table\(LOCAL_RANGES\) to table\(LOCAL_RANGES\)
 ### MULTI ISP - WAN failover
  if [ ${IPFW_multiwan} -eq 1 ]; then
-  define_multiwan "port" "123,161,110,995,143,993,4949-4952" "2"
-  define_multiwan "port" "4021,4025,8883,5222,5223,5228,143,993" "3"
-  define_multiwan "port" "22,33322,48822,873,874,875,33873,48873,3389,43389-43402,443,8443,80,81,88,3128" "1"
-  define_multiwan "port" "8080,8180,33380,48880,1194,41194,53,853,953,25,465,587" "1"
-  define_multiwan "srchost" "COMPUTERS" "1"
-  define_multiwan "srchost" "MOBILES" "2"
-  define_multiwan "srchost" "TABLETS" "2"
-  define_multiwan "srchost" "GUESTS" "3"
-  define_multiwan "srchost" "IOTS" "2"
-  define_multiwan "srchost" "CAMS" "3"
-  define_multiwan "srchost" "ROBOTS" "2"
-  define_multiwan "srchost" "AVRS" "2"
-  define_multiwan "srchost" "TVS" "3"
-  define_multiwan "srchost" "WIFIAPS" "1"
-  define_multiwan "srchost" "PRINTERS" "2"
-  define_multiwan "srchost" "SWITCHES" "3"
-  define_multiwan "srchost" "SERVERS" "1"
+  for i in ${IPFW_WANS_list}; do
+   j="IPFW_oip${i}"
+   if [ -n "${!j}" ]; then
+    for ports in $(array_groupby "${MWAN_PORTS["${i}"]}" "20"); do
+     if [ -n "${ports}" ]; then
+      define_multiwan "port" "${ports}" "${i}"
+     fi
+    done
+   fi
+  done
+  for i in ${IPFW_WANS_list}; do
+   j="IPFW_oip${i}"
+   if [ -n "${!j}" ]; then
+    for tables in $(array_groupby "${MWAN_TABLES["${i}"]}" "20"); do
+     if [ -n "${tables}" ]; then
+      define_multiwan "srchost" "${tables}" "${i}"
+     fi
+    done
+   fi
+  done
   for i in ${IPFW_WANS_list}; do
    j="IPFW_oip${i}"
    if [ -n "${!j}" ]; then
