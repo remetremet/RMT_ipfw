@@ -464,21 +464,27 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
   for i in ${IPFW_WANS_list}; do
    j="IPFW_oip${i}"
    if [ -n "${!j}" ]; then
-    for ports in $(array_groupby "${MWAN_PORTS["${i}"]}" "20"); do
-     if [ -n "${ports}" ]; then
-      define_multiwan "port" "${ports}" "${i}"
-     fi
-    done
+    TEST=${MWAN_PORTS["${i}"]};
+    if [ -n "${TEST}" ]; then
+     for ports in $(array_groupby "${TEST}" "20"); do
+      if [ -n "${ports}" ]; then
+       define_multiwan "port" "${ports}" "${i}"
+      fi
+     done
+    fi
    fi
   done
   for i in ${IPFW_WANS_list}; do
    j="IPFW_oip${i}"
    if [ -n "${!j}" ]; then
-    for tables in $(array_groupby "${MWAN_TABLES["${i}"]}" "20"); do
-     if [ -n "${tables}" ]; then
-      define_multiwan "srchost" "${tables}" "${i}"
-     fi
-    done
+    TEST=${MWAN_TABLES["${i}"]};
+    if [ -n "${TEST}" ]; then
+     for tables in $(array_groupby "${TEST}" "20"); do
+      if [ -n "${tables}" ]; then
+       define_multiwan "srchost" "${tables}" "${i}"
+      fi
+     done
+    fi
    fi
   done
   for i in ${IPFW_WANS_list}; do
