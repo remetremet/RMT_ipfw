@@ -40,21 +40,27 @@ fi
 prepare_tables
 
 ########################
-########################
 ### Loopback
+########################
 ${fwcmd} add 1 ${IPFW_allow} all from any to any via lo0
 ${fwcmd} add ${IPFW_denylog} all from any to 127.0.0.0/8
 ${fwcmd} add ${IPFW_denylog} ip from 127.0.0.0/8 to any
 if [ x"$ipv6_available" == x"0" ]; then
- ${fwcmd} add ${IPFW_denylog} all from any to ::1/128
- ${fwcmd} add ${IPFW_denylog} all from ::1/128 to any
+ if [ x"$IPFW_LAN_6" == x"1" -o x"$IPFW_WAN_6" == x"1" ]; then
+  ${fwcmd} add ${IPFW_denylog} all from any to ::1/128
+  ${fwcmd} add ${IPFW_denylog} all from ::1/128 to any
+ fi
 fi
+########################
 ### Traffic identification
+########################
 ${fwcmd} add skipto 1000 ip4 from any to any out
 ${fwcmd} add skipto 3000 ip4 from any to any in
 if [ x"$ipv6_available" == x"0" ]; then
- ${fwcmd} add skipto 5000 ip6 from any to any out
- ${fwcmd} add skipto 7000 ip6 from any to any in
+ if [ x"$IPFW_LAN_6" == x"1" -o x"$IPFW_WAN_6" == x"1" ]; then
+  ${fwcmd} add skipto 5000 ip6 from any to any out
+  ${fwcmd} add skipto 7000 ip6 from any to any in
+ fi
 fi
 for i in ${IPFW_WANS_list}; do
  j="IPFW_oip${i}"
@@ -820,6 +826,6 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
 fi
 
 ########################
-########################
 # END
+########################
 ${fwcmd} add 65500 ${IPFW_allowlog} ip from any to any
