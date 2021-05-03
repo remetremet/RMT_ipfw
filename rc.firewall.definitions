@@ -92,6 +92,7 @@ IPFW_known_ports="${IPFW_known_ports} 33322 33434 40126-40128 48822"
 
 unset MWAN_TABLES; declare -A MWAN_TABLES;
 unset MWAN_PORTS; declare -A MWAN_PORTS;
+unset BLOCK_TABLES; declare -A BLOCK_TABLES;
 
 ###########################
 # Functions
