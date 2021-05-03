@@ -90,6 +90,8 @@ IPFW_known_ports="${IPFW_known_ports} 8000 8080 8081 8086 8090 8181 8291 8292 84
 IPFW_known_ports="${IPFW_known_ports} 10001 10050 10051 10052 15672"
 IPFW_known_ports="${IPFW_known_ports} 33322 33434 40126-40128 48822"
 
+unset MWAN_TABLES; declare -A MWAN_TABLES;
+unset MWAN_PORTS; declare -A MWAN_PORTS;
 
 ###########################
 # Functions
