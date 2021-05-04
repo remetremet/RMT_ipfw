@@ -627,7 +627,7 @@ ${fwcmd} -q table WAN2 add 192.168.0.3/32
 
 
 #########################
-# Local FIB tables (MultiWAN by tables or ports, optional)
+# Local/FIB tables (MultiWAN by tables or ports, optional)
 #########################
 #${fwcmd} -q table GUESTS create > /dev/null 2> /dev/null
 #${fwcmd} -q table GUESTS flush > /dev/null 2> /dev/null
@@ -638,6 +638,9 @@ ${fwcmd} -q table WAN2 add 192.168.0.3/32
 #${fwcmd} -q table CAMS create > /dev/null 2> /dev/null
 #${fwcmd} -q table CAMS flush > /dev/null 2> /dev/null
 ###
+#${fwcmd} -q table CAMS_6 create > /dev/null 2> /dev/null
+#${fwcmd} -q table CAMS_6 flush > /dev/null 2> /dev/null
+###
 
 #MWAN_TABLES["1"]="COMPUTERS WIFIAPS SERVERS"
 #MWAN_TABLES["2"]="MOBILES TABLETS IOTS ROBOTS AVRS PRINTERS"
@@ -647,5 +650,9 @@ ${fwcmd} -q table WAN2 add 192.168.0.3/32
 #MWAN_PORTS["2"]="123 161 110 995 143 993 4949-4952 3128"
 #MWAN_PORTS["3"]="4021 4025 8883 5222 5223 5228 143 993"
 
+#BLOCK_TABLESRC="CAMS SWITCHES"
+#BLOCK_TABLESRC_6="CAMS6 SWITCHES6"
+#BLOCK_TABLEDST=""
+#BLOCK_TABLEDST_6=""
 
 fi
