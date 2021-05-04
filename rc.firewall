@@ -609,10 +609,16 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
  ${fwcmd} add ${IPFW_denylog} ip6 from any to table\(BLOCKED_RANGES6\)
 # blocked WAN OUT dstports (logging enabled)
  block_dstports "out6log" "${IPFW_wan6_out_dstports}"
-# block_srchost "SWITCHES6"
-# block_srchost "CAMS6"
-# block_dsthost "<table_name>"
-# block_dsthost "<table_name>"
+ for table in ${BLOCK_TABLESRC_6}; do
+  if [ -n "${table}" ]; then
+   block_srchost "${table}"
+  fi
+ done
+ for table in ${BLOCK_TABLEDST_6}; do
+  if [ -n "${table}" ]; then
+   block_dsthost "${table}"
+  fi
+ done
 # allowed WAN OUT dstports
  for ports in $(array_groupby "${IPFW_wan6_out_allowed_udp}" "20"); do
   if [ -n "${ports}" ]; then
@@ -767,10 +773,16 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
  ${fwcmd} add ${IPFW_denylog} ip4 from any to table\(BLOCKED_RANGES\)
 # blocked WAN OUT dstports (logging enabled)
  block_dstports "out4log" "${IPFW_wan4_out_dstports}"
- block_srchost "SWITCHES"
- block_srchost "CAMS"
-# block_dsthost "<table_name>"
-# block_dsthost "<table_name>"
+ for table in ${BLOCK_TABLESRC}; do
+  if [ -n "${table}" ]; then
+   block_srchost "${table}"
+  fi
+ done
+ for table in ${BLOCK_TABLEDST}; do
+  if [ -n "${table}" ]; then
+   block_dsthost "${table}"
+  fi
+ done
 # blocked WAN OUT dstports
  i=0
  for protoport in ${PROTOPORT}; do
