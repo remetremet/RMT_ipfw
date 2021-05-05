@@ -139,7 +139,7 @@ for i in ${IPFW_WANS_list}; do
   eval k="\$${k}"
   x=$(( 45000 + ( ( ${i} - 1 ) * 10 ) ))
   for ii in ${IPFW_WANS_list}; do
-   if [[ ! x"${j}" == x"${jj}" ]]; then
+   if [ ! x"${j}" == x"${jj}" ]; then
     jj="IPFW_oip${ii}"
     eval jj="\$${jj}"
     if [ -n "${jj}" ]; then
@@ -400,7 +400,7 @@ if [ "${IPFW_LAN_6}" == "1" ]; then
    k="IPFW_iif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip6 from any to any via ${k} out
-   if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
+   if [ ! x"${IPFW_LANS}" == x"${i}" ]; then
     ${fwcmd} add skipto 11000 all from any to any
    fi
   fi
@@ -436,7 +436,7 @@ if [ "${IPFW_LAN_6}" == "1" ]; then
    k="IPFW_iif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip6 from any to any via ${k} in
-   if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
+   if [ ! x"${IPFW_LANS}" == x"${i}" ]; then
     ${fwcmd} add skipto 16000 all from any to any
    fi
   fi
@@ -475,7 +475,7 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
    k="IPFW_iif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip4 from any to any via ${k} out
-   if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
+   if [ ! x"${IPFW_LANS}" == x"${i}" ]; then
     ${fwcmd} add skipto 21000 all from any to any
    fi
   fi
@@ -509,7 +509,7 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
    k="IPFW_iif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip4 from any to any via ${k} in
-   if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
+   if [ ! x"${IPFW_LANS}" == x"${i}" ]; then
     ${fwcmd} add skipto 26000 all from any to any
    fi
   fi
@@ -592,7 +592,7 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
    k="IPFW_oif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip6 from any to any via ${k} in
-   if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
+   if [ ! x"${IPFW_WANS}" == x"${i}" ]; then
     ${fwcmd} add skipto 31000 all from any to any
    fi
   fi
@@ -656,7 +656,7 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
    k="IPFW_oif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip6 from any to any via ${k} out
-   if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
+   if [ ! x"${IPFW_WANS}" == x"${i}" ]; then
     ${fwcmd} add skipto 36000 all from any to any
    fi
   fi
@@ -735,7 +735,7 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
    k="IPFW_oif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip4 from any to any via ${k} in
-   if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
+   if [ ! x"${IPFW_WANS}" == x"${i}" ]; then
     ${fwcmd} add skipto 41000 all from any to any
    fi
   fi
@@ -833,7 +833,7 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
    k="IPFW_oif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip4 from any to any via ${k} out
-   if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
+   if [ ! x"${IPFW_WANS}" == x"${i}" ]; then
     ${fwcmd} add skipto 46000 all from any to any
    fi
   fi
