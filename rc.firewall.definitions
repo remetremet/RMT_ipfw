@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/bin/sh
 
 fwcmd="/sbin/ipfw"
 
@@ -304,30 +304,36 @@ define_multiwan (){
  esac
  if [ -n "${cmd1}" ]; then
   k="IPFW_ofib${3}"
-  if [ -n "${!k}" ]; then
-   ${fwcmd} add set 0 setfib ${!k} ${cmd1} ${wan} ${cmd2}
+  eval k="\$${k}"
+  if [ -n "${k}" ]; then
+   ${fwcmd} add set 0 setfib ${k} ${cmd1} ${wan} ${cmd2}
   else
    k="IPFW_ofib${IPFW_WANS}"
-   if [ -n "${!k}" ]; then
-    ${fwcmd} add set 0 setfib ${!k} ${cmd1} ${wan} ${cmd2}
+   eval k="\$${k}"
+   if [ -n "${k}" ]; then
+    ${fwcmd} add set 0 setfib ${k} ${cmd1} ${wan} ${cmd2}
    fi
   fi
   for i in ${IPFW_WANS_list}; do
    j="IPFW_oip${i}"
-   if [ -n "${!j}" ]; then
+   eval j="\$${j}"
+   if [ -n "${j}" ]; then
     k="IPFW_ofib${i}"
+    eval k="\$${k}"
     if [ x"${i}" == x"${IPFW_WANS}" ]; then
      l="IPFW_ofib1"
-     next="${!l}"
+     eval l="\$${l}"
+     next="${l}"
     else
      l=$(( ${i} + 1 ))
      l="IPFW_ofib${l}"
-     next="${!l}"
+     eval l="\$${l}"
+     next="${l}"
     fi
     if [ x"${next}" == x"" ]; then
      next=0
     fi
-    ${fwcmd} add set ${i} setfib ${next} ${cmd1} ${wan} ${cmd2} fib ${!k}  # WAN if down
+    ${fwcmd} add set ${i} setfib ${next} ${cmd1} ${wan} ${cmd2} fib ${k}  # WAN if down
    fi
   done
  fi

@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/bin/sh
 
 # Suck in the configuration variables.
 if [ -z "${source_rc_confs_defined}" ]; then
@@ -30,7 +30,8 @@ ${fwcmd} set enable 0
 if [ ${IPFW_multiwan} -eq 1 ]; then
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    ${fwcmd} set disable ${i} # WAN is online
   else
    ${fwcmd} set enable ${i} # WAN is offline
@@ -64,11 +65,14 @@ if [ x"$ipv6_available" == x"0" ]; then
 fi
 for i in ${IPFW_WANS_list}; do
  j="IPFW_oip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   j="IPFW_nat${i}"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
-   ${fwcmd} nat ${i} config if ${!k} ${!j}
+   eval k="\$${k}"
+   ${fwcmd} nat ${i} config if ${k} ${j}
   fi
  fi
 done
@@ -79,60 +83,72 @@ ${fwcmd} add 999 skipto 65500 log all from any to any
 y=1000
 for i in ${IPFW_LANS_list}; do
  j="IPFW_iip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   k="IPFW_iif${i}"
+  eval k="\$${k}"
   l="IPFW_inet${i}"
+  eval l="\$${l}"
   x=$(( 20000 + ( ( ${i} - 1 ) * 10 ) ))
-  ${fwcmd} add ${y} skipto ${x} ip4 from ${!j} to any via ${!k} out
-  ${fwcmd} add skipto ${x} ip4 from any to ${!l} via ${!k} out
-  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${!k} out
+  ${fwcmd} add ${y} skipto ${x} ip4 from ${j} to any via ${k} out
+  ${fwcmd} add skipto ${x} ip4 from any to ${l} via ${k} out
+  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${k} out
  fi
  y=$(( ${y} + 5 )) # 5 rules max.
 done
 y=1100
 for i in ${IPFW_WANS_list}; do
  j="IPFW_oip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   k="IPFW_oif${i}"
+  eval k="\$${k}"
   x=$(( 45000 + ( ( ${i} - 1 ) * 10 ) ))
-  ${fwcmd} add ${y} skipto ${x} ip4 from ${!j} to any via ${!k} out
+  ${fwcmd} add ${y} skipto ${x} ip4 from ${j} to any via ${k} out
   for ii in ${IPFW_LANS_list}; do
    jj="IPFW_iip${ii}"
-   if [ -n "${!jj}" ]; then
+   eval jj="\$${jj}"
+   if [ -n "${jj}" ]; then
     kk="IPFW_inet${ii}"
-    ${fwcmd} add skipto ${x} ip4 from ${!kk} to any via ${!k} out
+    eval kk="\$${kk}"
+    ${fwcmd} add skipto ${x} ip4 from ${kk} to any via ${k} out
    fi
   done
-  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${!k} out
+  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${k} out
  fi
  y=$(( ${y} + 25 ))
 done
 y=1600
 for i in ${IPFW_LANS_list}; do
  j="IPFW_iip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   k="IPFW_iif${i}"
+  eval k="\$${k}"
   x=$(( 20000 + ( ( ${i} - 1 ) * 10 ) ))
-  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${!k} out
+  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${k} out
  fi
  y=$(( ${y} + 5 )) # 5 rules max.
 done
 y=1700
 for i in ${IPFW_WANS_list}; do
  j="IPFW_oip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   k="IPFW_oif${i}"
+  eval k="\$${k}"
   x=$(( 45000 + ( ( ${i} - 1 ) * 10 ) ))
   for ii in ${IPFW_WANS_list}; do
    if [[ ! x"${j}" == x"${jj}" ]]; then
     jj="IPFW_oip${ii}"
-    if [ -n "${!jj}" ]; then
-     ${fwcmd} add ${y} skipto ${x} ip4 from ${!jj} to any via ${!k} out
+    eval jj="\$${jj}"
+    if [ -n "${jj}" ]; then
+     ${fwcmd} add ${y} skipto ${x} ip4 from ${jj} to any via ${k} out
      y=$(( ${y} + 1 ))
     fi
    fi
   done
-  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${!k} out
+  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${k} out
   y=$(( ${y} + 1 ))
  fi
 done
@@ -140,56 +156,67 @@ done
 y=3000
 for i in ${IPFW_LANS_list}; do
  j="IPFW_iip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   k="IPFW_iif${i}"
+  eval k="\$${k}"
   l="IPFW_inet${i}"
+  eval l="\$${l}"
   x=$(( 25000 + ( ( ${i} - 1 ) * 10 ) ))
-  ${fwcmd} add ${y} skipto ${x} ip4 from any to ${!j} via ${!k} in
-  ${fwcmd} add skipto ${x} ip4 from ${!l} to any via ${!k} in
-  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${!k} in
+  ${fwcmd} add ${y} skipto ${x} ip4 from any to ${j} via ${k} in
+  ${fwcmd} add skipto ${x} ip4 from ${l} to any via ${k} in
+  ${fwcmd} add skipto ${x} ip4 from any to 255.255.255.255 via ${k} in
  fi
  y=$(( ${y} + 5 )) # 5 rules max.
 done
 y=3100
 for i in ${IPFW_WANS_list}; do
  j="IPFW_oip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   k="IPFW_oif${i}"
+  eval k="\$${k}"
   l=$(( ${i} * 2 ))
   x=$(( 40000 + ( ( ${i} - 1 ) * 10 ) ))
-  ${fwcmd} add ${y} skipto ${x} ip4 from any to ${!j} via ${!k} in
+  ${fwcmd} add ${y} skipto ${x} ip4 from any to ${j} via ${k} in
   for ii in ${IPFW_LANS_list}; do
    jj="IPFW_iip${ii}"
-   if [ -n "${!jj}" ]; then
+   eval jj="\$${jj}"
+   if [ -n "${jj}" ]; then
     kk="IPFW_inet${ii}"
-    ${fwcmd} add skipto ${x} ip4 from any to ${!kk} via ${!k} in
+    eval kk="\$${kk}"
+    ${fwcmd} add skipto ${x} ip4 from any to ${kk} via ${k} in
    fi
   done
   if [ x"${IPFW_DHCP}" == x"1" ]; then
-   ${fwcmd} add skipto ${x} ip4 from 0.0.0.0 to 255.255.255.255 via ${!k} in
+   ${fwcmd} add skipto ${x} ip4 from 0.0.0.0 to 255.255.255.255 via ${k} in
   fi
-  ${fwcmd} add ${IPFW_deny} ip4 from any to 255.255.255.255 via ${!k} in
+  ${fwcmd} add ${IPFW_deny} ip4 from any to 255.255.255.255 via ${k} in
  fi
  y=$(( ${y} + 25 ))
 done
 y=3600
 for i in ${IPFW_LANS_list}; do
  j="IPFW_iip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   k="IPFW_iif${i}"
+  eval k="\$${k}"
   x=$(( 25000 + ( ( ${i} - 1 ) * 10 ) ))
-  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${!k} in
+  ${fwcmd} add ${y} skipto ${x} log ip4 from any to any via ${k} in
  fi
  y=$(( ${y} + 5 )) # max. 5 rules
 done
 y=3700
 for i in ${IPFW_WANS_list}; do
  j="IPFW_oip${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   k="IPFW_oif${i}"
+  eval k="\$${k}"
   x=$(( 40000 + ( ( ${i} - 1 ) * 10 ) ))
-  ${fwcmd} add ${y} ${IPFW_deny} igmp from any to any via ${!k} in
-  ${fwcmd} add skipto ${x} log ip4 from any to any via ${!k} in
+  ${fwcmd} add ${y} ${IPFW_deny} igmp from any to any via ${k} in
+  ${fwcmd} add skipto ${x} log ip4 from any to any via ${k} in
  fi
  y=$(( ${y} + 5 )) # max. 5 rules
 done
@@ -198,67 +225,78 @@ if [ x"$ipv6_available" == x"0" ]; then
  y=5000
  for i in ${IPFW_LANS_list}; do
   j="IPFW_iip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
+   eval k="\$${k}"
    l="IPFW_inet${i}_6"
+   eval l="\$${l}"
    x=$(( 10000 + ( ( ${i} - 1 ) * 10 ) ))
-   ${fwcmd} add ${y} skipto ${x} ip6 from ${!j} to any via ${!k} out
-   ${fwcmd} add skipto ${x} ip6 from any to ${!l} via ${!k} out
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${!k} out
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${!k} out
-   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${!k} out
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${!k} out
-   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${!k} out
-   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${!k} out
-   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${!k} out
-   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${!k} out
+   ${fwcmd} add ${y} skipto ${x} ip6 from ${j} to any via ${k} out
+   ${fwcmd} add skipto ${x} ip6 from any to ${l} via ${k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${k} out
+   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${k} out
   fi
   y=$(( ${y} + 20 )) # 20 rules max.
  done
  y=5400
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
+   eval k="\$${k}"
    x=$(( 35000 + ( ( ${i} - 1 ) * 10 ) ))
-   ${fwcmd} add ${y} skipto ${x} ip6 from ${!j} to any via ${!k} out
+   ${fwcmd} add ${y} skipto ${x} ip6 from ${j} to any via ${k} out
    for ii in ${IPFW_LANS_list}; do
     jj="IPFW_iip${ii}_6"
-    if [ -n "${!jj}" ]; then
+    eval jj="\$${jj}"
+    if [ -n "${jj}" ]; then
      kk="IPFW_inet${i}_6"
-     ${fwcmd} add skipto ${x} ip6 from ${!kk} to any via ${!k} out
+     eval kk="\$${kk}"
+     ${fwcmd} add skipto ${x} ip6 from ${kk} to any via ${k} out
     fi
    done
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${!k} out
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${!k} out
-   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${!k} out
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${!k} out
-   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${!k} out
-   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${!k} out
-   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${!k} out
-   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${!k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${k} out
+   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${k} out
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${k} out
+   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${k} out
   fi
   y=$(( ${y} + 40 )) # 40 rules max.
  done
  y=6200
  for i in ${IPFW_LANS_list}; do
   j="IPFW_iip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
+   eval k="\$${k}"
    x=$(( 10000 + ( ( ${i} - 1 ) * 10 ) ))
-   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${!k} out
-   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${!k} out
+   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${k} out
+   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${k} out
   fi
   y=$(( ${y} + 5 )) # 5 rules max.
  done
  y=6300
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
+   eval k="\$${k}"
    x=$(( 35000 + ( ( ${i} - 1 ) * 10 ) ))
-   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${!k} out
-   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${!k} out
+   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${k} out
+   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${k} out
   fi
   y=$(( ${y} + 5 )) # 5 rules max.
  done
@@ -266,69 +304,81 @@ if [ x"$ipv6_available" == x"0" ]; then
  y=7000
  for i in ${IPFW_LANS_list}; do
   j="IPFW_iip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
+   eval k="\$${k}"
    l="IPFW_inet${i}_6"
+   eval l="\$${l}"
    x=$(( 15000 + ( ( ${i} - 1 ) * 10 ) ))
-   ${fwcmd} add ${y} skipto ${x} ip6 from any to ${!j} via ${!k} in
-   ${fwcmd} add skipto ${x} ip6 from ${!l} to any via ${!k} in
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${!k} in
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${!k} in
-   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${!k} in
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${!k} in
-   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${!k} in
-   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${!k} in
-   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${!k} in
-   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${!k} in
+   ${fwcmd} add ${y} skipto ${x} ip6 from any to ${j} via ${k} in
+   ${fwcmd} add skipto ${x} ip6 from ${l} to any via ${k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${k} in
+   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${k} in
   fi
   y=$(( ${y} + 20 )) # 20 rules max.
  done
  y=7400
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
+   eval k="\$${k}"
    l="IPFW_onet${i}_6"
+   eval l="\$${l}"
    x=$(( 30000 + ( ( ${i} - 1 ) * 10 ) ))
-   ${fwcmd} add ${y} skipto ${x} ip6 from any to ${!j} via ${!k} in
-   ${fwcmd} add skipto ${x} ip6 from ${!l} to fe00::/4 via ${!k} in
+   ${fwcmd} add ${y} skipto ${x} ip6 from any to ${j} via ${k} in
+   ${fwcmd} add skipto ${x} ip6 from ${l} to fe00::/4 via ${k} in
    for ii in ${IPFW_LANS_list}; do
     jj="IPFW_iip${ii}_6"
-    if [ -n "${!jj}" ]; then
+    eval jj="\$${jj}"
+    if [ -n "${jj}" ]; then
      kk="IPFW_inet${i}_6"
-     ${fwcmd} add skipto ${x} ip6 from any to ${!kk} via ${!k} in
+     eval kk="\$${kk}"
+     ${fwcmd} add skipto ${x} ip6 from any to ${kk} via ${k} in
     fi
    done
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${!k} in
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${!k} in
-   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${!k} in
-   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${!k} in
-   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${!k} in
-   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${!k} in
-   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${!k} in
-   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${!k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 546,547 to fe80::/10 546,547 via ${k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 521,546,547 to ff02::/16 521,546,547 via ${k} in
+   ${fwcmd} add ${IPFW_deny} ip6 from fe80::/10 to ff02::/16 5355 via ${k} in
+   ${fwcmd} add skipto ${x} ip6 from fe80::/10 to any via ${k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from ::/128 to ff02::/16 via ${k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to fe80::/10 via ${k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from fe80::/10 to ff02::/16 via ${k} in
+   ${fwcmd} add skipto ${x} ipv6-icmp from any to any icmp6types 1,2,128,129,135,136 via ${k} in
   fi
   y=$(( ${y} + 40 )) # 40 rules max.
  done
  y=8200
  for i in ${IPFW_LANS_list}; do
   j="IPFW_iip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
+   eval k="\$${k}"
    x=$(( 15000 + ( ( ${i} - 1 ) * 10 ) ))
-   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${!k} in
-   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${!k} in
+   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${k} in
+   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${k} in
   fi
   y=$(( ${y} + 5 )) # 5 rules max.
  done
  y=8300
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
+   eval k="\$${k}"
    x=$(( 30000 + ( ( ${i} - 1 ) * 10 ) ))
-   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${!k} in
-   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${!k} in
+   ${fwcmd} add ${y} skipto ${x} log ip6 from any to any via ${k} in
+   ${fwcmd} add skipto ${x} log ipv6-icmp from any to any via ${k} in
   fi
   y=$(( ${y} + 5 )) # 5 rules max.
  done
@@ -345,9 +395,11 @@ if [ "${IPFW_LAN_6}" == "1" ]; then
  y=10000
  for i in ${IPFW_LANS_list}; do
   j="IPFW_iip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
-   ${fwcmd} add ${y} count ip6 from any to any via ${!k} out
+   eval k="\$${k}"
+   ${fwcmd} add ${y} count ip6 from any to any via ${k} out
    if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
     ${fwcmd} add skipto 11000 all from any to any
    fi
@@ -379,9 +431,11 @@ if [ "${IPFW_LAN_6}" == "1" ]; then
  y=15000
  for i in ${IPFW_LANS_list}; do
   j="IPFW_iip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
-   ${fwcmd} add ${y} count ip6 from any to any via ${!k} in
+   eval k="\$${k}"
+   ${fwcmd} add ${y} count ip6 from any to any via ${k} in
    if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
     ${fwcmd} add skipto 16000 all from any to any
    fi
@@ -416,9 +470,11 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
  y=20000
  for i in ${IPFW_LANS_list}; do
   j="IPFW_iip${i}"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
-   ${fwcmd} add ${y} count ip4 from any to any via ${!k} out
+   eval k="\$${k}"
+   ${fwcmd} add ${y} count ip4 from any to any via ${k} out
    if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
     ${fwcmd} add skipto 21000 all from any to any
    fi
@@ -448,9 +504,11 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
  y=25000
  for i in ${IPFW_LANS_list}; do
   j="IPFW_iip${i}"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
-   ${fwcmd} add ${y} count ip4 from any to any via ${!k} in
+   eval k="\$${k}"
+   ${fwcmd} add ${y} count ip4 from any to any via ${k} in
    if [[ ! x"${IPFW_LANS}" == x"${i}" ]]; then
     ${fwcmd} add skipto 26000 all from any to any
    fi
@@ -463,7 +521,8 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
  if [ ${IPFW_multiwan} -eq 1 ]; then
   for i in ${IPFW_WANS_list}; do
    j="IPFW_oip${i}"
-   if [ -n "${!j}" ]; then
+   eval j="\$${j}"
+   if [ -n "${j}" ]; then
     TEST=${MWAN_PORTS["${i}"]};
     if [ -n "${TEST}" ]; then
      for ports in $(array_groupby "${TEST}" "20"); do
@@ -476,7 +535,8 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
   done
   for i in ${IPFW_WANS_list}; do
    j="IPFW_oip${i}"
-   if [ -n "${!j}" ]; then
+   eval j="\$${j}"
+   if [ -n "${j}" ]; then
     TEST=${MWAN_TABLES["${i}"]};
     if [ -n "${TEST}" ]; then
      for tables in $(array_groupby "${TEST}" "20"); do
@@ -489,11 +549,14 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
   done
   for i in ${IPFW_WANS_list}; do
    j="IPFW_oip${i}"
-   if [ -n "${!j}" ]; then
+   eval j="\$${j}"
+   if [ -n "${j}" ]; then
     define_multiwan "srchost" "WAN${i}" "${i}"
     k="IPFW_ofib${i}"
+    eval k="\$${k}"
     l="IPFW_onet${i}"
-    ${fwcmd} add setfib ${!k} all from any to ${!l}
+    eval l="\$${l}"
+    ${fwcmd} add setfib ${k} all from any to ${l}
    fi
   done
  fi
@@ -524,9 +587,11 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
  y=30000
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
-   ${fwcmd} add ${y} count ip6 from any to any via ${!k} in
+   eval k="\$${k}"
+   ${fwcmd} add ${y} count ip6 from any to any via ${k} in
    if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
     ${fwcmd} add skipto 31000 all from any to any
    fi
@@ -568,7 +633,7 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
    protoaction=$(array_get "${PROTOACTION}" "${i}")
    block_protocol "ipv6" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip6}" "allow"
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
 ###
  for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
@@ -586,9 +651,11 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
  y=35000
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}_6"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
-   ${fwcmd} add ${y} count ip6 from any to any via ${!k} out
+   eval k="\$${k}"
+   ${fwcmd} add ${y} count ip6 from any to any via ${k} out
    if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
     ${fwcmd} add skipto 36000 all from any to any
    fi
@@ -642,7 +709,7 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
     block_protocol "ipv6" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip6}" "allow"
    fi
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
 ###
  for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
@@ -663,9 +730,11 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
  y=40000
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
-   ${fwcmd} add ${y} count ip4 from any to any via ${!k} in
+   eval k="\$${k}"
+   ${fwcmd} add ${y} count ip4 from any to any via ${k} in
    if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
     ${fwcmd} add skipto 41000 all from any to any
    fi
@@ -691,7 +760,7 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
     block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "deny"
    fi
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
  i=0
  for protoport in ${PROTOPORT}; do
@@ -704,14 +773,16 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
     block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "denyonly"
    fi
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
 # NAT
  for i in ${IPFW_WANS_list}; do
   j="IPFW_nat${i}"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
-   ${fwcmd} add nat ${i} ip4 from any to any via ${!k}
+   eval k="\$${k}"
+   ${fwcmd} add nat ${i} ip4 from any to any via ${k}
   fi
  done
  ${fwcmd} add ${IPFW_allow} icmp from any to any
@@ -738,7 +809,7 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
     block_protocol "ipv4" "in" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "nodeny"
    fi
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
 ###
  for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
@@ -757,9 +828,11 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
  y=45000
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
-   ${fwcmd} add ${y} count ip4 from any to any via ${!k} out
+   eval k="\$${k}"
+   ${fwcmd} add ${y} count ip4 from any to any via ${k} out
    if [[ ! x"${IPFW_WANS}" == x"${i}" ]]; then
     ${fwcmd} add skipto 46000 all from any to any
    fi
@@ -795,14 +868,16 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
     block_protocol "ipv4" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "denyonly"
    fi
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
 # NAT
  for i in ${IPFW_WANS_list}; do
   j="IPFW_nat${i}"
-  if [ -n "${!j}" ]; then
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
-   ${fwcmd} add nat ${i} ip4 from any to any via ${!k}
+   eval k="\$${k}"
+   ${fwcmd} add nat ${i} ip4 from any to any via ${k}
   fi
  done
  ${fwcmd} add ${IPFW_allow} icmp from any to any
@@ -829,7 +904,7 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
     block_protocol "ipv4" "outreply" "${protoport}" "${protocol}" "${protolog}" "${protoip4}" "nodeny"
    fi
   fi
-  i=`expr ${i} + 1`
+  i=$(( ${i} + 1 ))
  done
 ###
  for ports in $(array_groupby "${IPFW_known_ports}" "20"); do
