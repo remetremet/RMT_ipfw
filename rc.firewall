@@ -523,7 +523,8 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
    j="IPFW_oip${i}"
    eval j="\$${j}"
    if [ -n "${j}" ]; then
-    TEST=${MWAN_PORTS["${i}"]};
+    TEST="MWAN_PORTS${i}";
+    eval TEST="\$${TEST}"
     if [ -n "${TEST}" ]; then
      for ports in $(array_groupby "${TEST}" "20"); do
       if [ -n "${ports}" ]; then
@@ -537,7 +538,8 @@ if [ "${IPFW_LAN_4}" == "1" ]; then
    j="IPFW_oip${i}"
    eval j="\$${j}"
    if [ -n "${j}" ]; then
-    TEST=${MWAN_TABLES["${i}"]};
+    TEST="MWAN_TABLES${i}";
+    eval TEST="\$${TEST}"
     if [ -n "${TEST}" ]; then
      for tables in $(array_groupby "${TEST}" "20"); do
       if [ -n "${tables}" ]; then
