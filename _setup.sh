@@ -3,7 +3,7 @@
 BASEPATH="/var/db/RMT_ipfw"
 
 # Software requirements
-pkg install -y bash
+pkg install -y bash git
 
 # Setup directories
 if [ ! -d "${BASEPATH}" ]; then
@@ -23,5 +23,5 @@ chmod 755 ${BASEPATH}/_*.sh
 
 echo "-----"
 echo " Do not forget to add cron job via 'crontab -e':"
-echo " 59       *       *       *       *       /var/db/RMT_ipfw/_update.sh"
+echo " 59       *       *       *       *       ${BASEPATH}/_update.sh"
 echo "-----"
