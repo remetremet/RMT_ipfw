@@ -25,7 +25,7 @@ afexists inet6
 ipv6_available=$?
 . /etc/rc.firewall.definitions
 . /etc/rc.firewall.config
-${fwcmd} -f flush
+${fwcmd} -f flush > /dev/null 2> /dev/null
 ${fwcmd} set enable 0
 if [ ${IPFW_multiwan} -eq 1 ]; then
  for i in ${IPFW_WANS_list}; do
