@@ -1,7 +1,7 @@
 # RMT_ipfw
-Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping, dualstack, router, endpoint, VPN)
+Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping, stateful or stateless. For a router, desktop, server, VPN server, ...
 
-- Statefull/Stateless firewall
+- Stateful/Stateless firewall
 - Multiple WANs (FreeBSD FIBs)
 - Multiple LANs (incl. VLANs)
 - IPv6/IPv4
@@ -13,7 +13,8 @@ Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping
 
 Requirements
 ---
-- `bash`
+- `bash` - for Github updates
+- `git`
 - FreeBSD IPFW2 (incl. NAT)
 - FreeBSD 11.0+
 - use [tweaks](tweaks) to set and tune network subsystem
