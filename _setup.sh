@@ -4,6 +4,8 @@ BASEPATH="/var/db/RMT_ipfw"
 
 # Software requirements
 pkg install -y bash git
+pwd_mkdb /etc/master.passwd
+pkg install -y bash git
 
 # Setup directories
 if [ ! -d "${BASEPATH}" ]; then
