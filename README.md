@@ -20,6 +20,8 @@ Requirements
 - use [tweaks](tweaks) to set and tune network subsystem
 
 
+---
+
 ![license-image](https://img.shields.io/github/license/remetremet/RMT_ipfw?style=plastic)
 ![last-commit-image](https://img.shields.io/github/last-commit/remetremet/RMT_ipfw?style=plastic)
 ![repo-size-image](https://img.shields.io/github/repo-size/remetremet/RMT_ipfw?style=plastic)
