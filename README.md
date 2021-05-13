@@ -13,7 +13,7 @@ Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping
 
 Requirements
 ---
-- `bash` - for Github updates
+- `bash` - for Github updates (firewall scripts run under shell)
 - `git`
 - FreeBSD IPFW2 (incl. NAT)
 - FreeBSD 11.0+
