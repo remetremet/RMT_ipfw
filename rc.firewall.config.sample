@@ -574,7 +574,8 @@ for i in ${IPFW_WANS_list}; do
   ${fwcmd} -q table OUT_RANGES add ${j}/32
  fi
  j="IPFW_onet${i}"
- if [ -n "${!j}" ]; then
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
   ${fwcmd} -q table OUT_RANGES add ${j}
  fi
  if [ x"$ipv6_available" == x"0" ]; then
