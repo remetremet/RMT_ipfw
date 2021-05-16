@@ -10,6 +10,10 @@ Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping
 - IP blacklist (IPv4 and IPv6) integrated
 - Traffic stats counting (for Munin, Zabbix, Nagios, etc. monitoring)
 
+Install
+---
+ Run `bash -c "$(curl -fsSL https://raw.githubusercontent.com/remetremet/RMT_ipfw/master/_setup.sh)"`
+
 
 Requirements
 ---
