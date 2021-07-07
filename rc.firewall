@@ -25,6 +25,18 @@ afexists inet6
 ipv6_available=$?
 . /etc/rc.firewall.definitions
 . /etc/rc.firewall.config
+if [ x"${IPFW_LANS6}" == x"" ]; then
+ IPFW_LANS6=${IPFW_LANS}
+fi
+if [ x"${IPFW_WANS6}" == x"" ]; then
+ IPFW_WANS6=${IPFW_WANS}
+fi
+if [ x"${IPFW_LANS6_list}" == x"" ]; then
+ IPFW_LANS6_list=${IPFW_LANS_list}
+fi
+if [ x"${IPFW_WANS6_list}" == x"" ]; then
+ IPFW_WANS6_list=${IPFW_WANS_list}
+fi
 ${fwcmd} -f flush > /dev/null 2> /dev/null
 ${fwcmd} set enable 0
 if [ ${IPFW_multiwan} -eq 1 ]; then
@@ -223,7 +235,7 @@ done
 if [ x"$ipv6_available" == x"0" ]; then
 # IPv6 Out
  y=5000
- for i in ${IPFW_LANS_list}; do
+ for i in ${IPFW_LANS6_list}; do
   j="IPFW_iip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
@@ -246,7 +258,7 @@ if [ x"$ipv6_available" == x"0" ]; then
   y=$(( ${y} + 20 )) # 20 rules max.
  done
  y=5400
- for i in ${IPFW_WANS_list}; do
+ for i in ${IPFW_WANS6_list}; do
   j="IPFW_oip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
@@ -254,7 +266,7 @@ if [ x"$ipv6_available" == x"0" ]; then
    eval k="\$${k}"
    x=$(( 35000 + ( ( ${i} - 1 ) * 10 ) ))
    ${fwcmd} add ${y} skipto ${x} ip6 from ${j} to any via ${k} out
-   for ii in ${IPFW_LANS_list}; do
+   for ii in ${IPFW_LANS6_list}; do
     jj="IPFW_iip${ii}_6"
     eval jj="\$${jj}"
     if [ -n "${jj}" ]; then
@@ -275,7 +287,7 @@ if [ x"$ipv6_available" == x"0" ]; then
   y=$(( ${y} + 40 )) # 40 rules max.
  done
  y=6200
- for i in ${IPFW_LANS_list}; do
+ for i in ${IPFW_LANS6_list}; do
   j="IPFW_iip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
@@ -288,7 +300,7 @@ if [ x"$ipv6_available" == x"0" ]; then
   y=$(( ${y} + 5 )) # 5 rules max.
  done
  y=6300
- for i in ${IPFW_WANS_list}; do
+ for i in ${IPFW_WANS6_list}; do
   j="IPFW_oip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
@@ -302,7 +314,7 @@ if [ x"$ipv6_available" == x"0" ]; then
  done
 # IPv6 In
  y=7000
- for i in ${IPFW_LANS_list}; do
+ for i in ${IPFW_LANS6_list}; do
   j="IPFW_iip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
@@ -325,7 +337,7 @@ if [ x"$ipv6_available" == x"0" ]; then
   y=$(( ${y} + 20 )) # 20 rules max.
  done
  y=7400
- for i in ${IPFW_WANS_list}; do
+ for i in ${IPFW_WANS6_list}; do
   j="IPFW_oip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
@@ -336,7 +348,7 @@ if [ x"$ipv6_available" == x"0" ]; then
    x=$(( 30000 + ( ( ${i} - 1 ) * 10 ) ))
    ${fwcmd} add ${y} skipto ${x} ip6 from any to ${j} via ${k} in
    ${fwcmd} add skipto ${x} ip6 from ${l} to fe00::/4 via ${k} in
-   for ii in ${IPFW_LANS_list}; do
+   for ii in ${IPFW_LANS6_list}; do
     jj="IPFW_iip${ii}_6"
     eval jj="\$${jj}"
     if [ -n "${jj}" ]; then
@@ -357,7 +369,7 @@ if [ x"$ipv6_available" == x"0" ]; then
   y=$(( ${y} + 40 )) # 40 rules max.
  done
  y=8200
- for i in ${IPFW_LANS_list}; do
+ for i in ${IPFW_LANS6_list}; do
   j="IPFW_iip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
@@ -370,7 +382,7 @@ if [ x"$ipv6_available" == x"0" ]; then
   y=$(( ${y} + 5 )) # 5 rules max.
  done
  y=8300
- for i in ${IPFW_WANS_list}; do
+ for i in ${IPFW_WANS6_list}; do
   j="IPFW_oip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
@@ -393,14 +405,14 @@ if [ "${IPFW_LAN_6}" == "1" ]; then
 ########################
 # All LANs IPv6 out
  y=10000
- for i in ${IPFW_LANS_list}; do
+ for i in ${IPFW_LANS6_list}; do
   j="IPFW_iip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip6 from any to any via ${k} out
-   if [ ! x"${IPFW_LANS}" == x"${i}" ]; then
+   if [ ! x"${IPFW_LANS6}" == x"${i}" ]; then
     ${fwcmd} add skipto 11000 all from any to any
    fi
   fi
@@ -429,14 +441,14 @@ if [ "${IPFW_LAN_6}" == "1" ]; then
 ########################
 # All LANs IPv6 in
  y=15000
- for i in ${IPFW_LANS_list}; do
+ for i in ${IPFW_LANS6_list}; do
   j="IPFW_iip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
    k="IPFW_iif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip6 from any to any via ${k} in
-   if [ ! x"${IPFW_LANS}" == x"${i}" ]; then
+   if [ ! x"${IPFW_LANS6}" == x"${i}" ]; then
     ${fwcmd} add skipto 16000 all from any to any
    fi
   fi
@@ -587,14 +599,14 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
 ########################
 # All WANs IPv6 in
  y=30000
- for i in ${IPFW_WANS_list}; do
+ for i in ${IPFW_WANS6_list}; do
   j="IPFW_oip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip6 from any to any via ${k} in
-   if [ ! x"${IPFW_WANS}" == x"${i}" ]; then
+   if [ ! x"${IPFW_WANS6}" == x"${i}" ]; then
     ${fwcmd} add skipto 31000 all from any to any
    fi
   fi
@@ -651,14 +663,14 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
 ########################
 # All WANs IPv6 out
  y=35000
- for i in ${IPFW_WANS_list}; do
+ for i in ${IPFW_WANS6_list}; do
   j="IPFW_oip${i}_6"
   eval j="\$${j}"
   if [ -n "${j}" ]; then
    k="IPFW_oif${i}"
    eval k="\$${k}"
    ${fwcmd} add ${y} count ip6 from any to any via ${k} out
-   if [ ! x"${IPFW_WANS}" == x"${i}" ]; then
+   if [ ! x"${IPFW_WANS6}" == x"${i}" ]; then
     ${fwcmd} add skipto 36000 all from any to any
    fi
   fi
