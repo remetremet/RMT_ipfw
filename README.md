@@ -17,7 +17,7 @@ Install
 
 Requirements
 ---
-- `bash` - for Github updates (firewall scripts run under shell)
+- `bash` - for Github updates (firewall scripts runs with regular `sh` shell)
 - `git`
 - FreeBSD IPFW2 (incl. NAT)
 - FreeBSD 11.0+

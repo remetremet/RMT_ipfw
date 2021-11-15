@@ -445,11 +445,17 @@ fi
 #########################
 #########################
 IPFW_WANS=0;
+IPFW_WANS6=0;
 for i in $(seq 1 1 20); do
  j="IPFW_oip${i}"
  eval j="\$${j}"
  if [ -n "${j}" ]; then
   IPFW_WANS=$(( ${IPFW_WANS} + 1 )) 
+ fi
+ j="IPFW_oip${i}_6"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_WANS6=$(( ${IPFW_WANS6} + 1 )) 
  fi
 done
 if [ ! x"${IPFW_WANS}" == x"0" ]; then
@@ -457,18 +463,34 @@ if [ ! x"${IPFW_WANS}" == x"0" ]; then
 else
  IPFW_WANS_list=""
 fi
+if [ ! x"${IPFW_WANS6}" == x"0" ]; then
+ IPFW_WANS6_list=$(seq 1 1 ${IPFW_WANS6})
+else
+ IPFW_WANS6_list=""
+fi
 IPFW_LANS=0;
+IPFW_LANS6=0;
 for i in $(seq 1 1 20); do
  j="IPFW_iip${i}"
  eval j="\$${j}"
  if [ -n "${j}" ]; then
   IPFW_LANS=$(( ${IPFW_LANS} + 1 )) 
  fi
+ j="IPFW_iip${i}_6"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_LANS6=$(( ${IPFW_LANS6} + 1 )) 
+ fi
 done
 if [ ! x"${IPFW_LANS}" == x"0" ]; then
  IPFW_LANS_list=$(seq 1 1 ${IPFW_LANS})
 else
  IPFW_LANS_list=""
+fi
+if [ ! x"${IPFW_LANS6}" == x"0" ]; then
+ IPFW_LANS6_list=$(seq 1 1 ${IPFW_LANS6})
+else
+ IPFW_LANS6_list=""
 fi
 IPFW_WAN_6=""
 IPFW_WAN_4=""
@@ -478,6 +500,8 @@ for i in ${IPFW_WANS_list}; do
  if [ -n "${j}" ]; then
   IPFW_WAN_4="1"
  fi
+done
+for i in ${IPFW_WANS6_list}; do
  j="IPFW_oip${i}_6"
  eval j="\$${j}"
  if [ -n "${j}" ]; then
@@ -492,6 +516,8 @@ for i in ${IPFW_LANS_list}; do
  if [ -n "${j}" ]; then
   IPFW_LAN_4="1"
  fi
+done
+for i in ${IPFW_LANS6_list}; do
  j="IPFW_iip${i}_6"
  eval j="\$${j}"
  if [ -n "${j}" ]; then
