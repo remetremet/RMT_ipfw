@@ -19,7 +19,7 @@ Requirements
 ---
 - `bash` - for Github updates (firewall scripts runs with regular `sh` shell)
 - `git`
-- FreeBSD IPFW2 (incl. NAT)
+- FreeBSD IPFW2 (incl. NAT and dummynet)
 - FreeBSD 11.0+
 - use [tweaks](tweaks) to set and tune network subsystem
 
