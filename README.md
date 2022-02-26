@@ -8,6 +8,7 @@ Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping
 - Host, protocol and port based
 - Failover / Load balancing of multiple WANs
 - IP blacklist (IPv4 and IPv6) integrated
+- Geo IP blacklist (IPv4 and IPv6) integrated - feel free to block RU+BY traffic
 - Traffic stats counting (for Munin, Zabbix, Nagios, etc. monitoring)
 
 Install
