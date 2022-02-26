@@ -45,6 +45,15 @@ IPFW_inet1_6="2fff:1fff:10:1ff0::/64"
 IPFW_iip1_6="2fff:1fff:10:1ff0::254"
 
 
+#########################
+# Geo IP definitions
+#########################
+# https://www.ipdeny.com/ipblocks/data/aggregated
+# https://www.ipdeny.com/ipv6/ipaddresses/aggregated
+IPFW_geo_block="ru by cu"     # block traffic from Belarus, Russia and Cuba
+
+
+
 if [ "${XYZ}" != "info" ]; then
 ########################################
 # WAN input dstports blocked
@@ -703,5 +712,22 @@ ${fwcmd} -q table WAN2 add 192.168.0.3/32
 #BLOCK_TABLESRC_6="CAMS6 SWITCHES6"
 #BLOCK_TABLEDST=""
 #BLOCK_TABLEDST_6=""
+
+
+#########################
+# Update Geo IP blocks
+#########################
+ for country in ${IPFW_geo_block}; do
+  fetch "https://www.ipdeny.com/ipblocks/data/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo_${country}" > /dev/null 2> /dev/null
+  fetch "https://www.ipdeny.com/ipv6/ipaddresses/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo6_${country}" > /dev/null 2> /dev/null
+ done
+ echo "" > "/etc/rc.firewall.blacklist_geo"
+ echo "" > "/etc/rc.firewall.blacklist_geo6"
+ for country in ${IPFW_geo_block}; do
+  cat "/tmp/rc.firewall.blacklist_geo_${country}" >> "/etc/rc.firewall.blacklist_geo"
+  cat "/tmp/rc.firewall.blacklist_geo6_${country}" >> "/etc/rc.firewall.blacklist_geo6"
+  rm -f "/tmp/rc.firewall.blacklist_geo_${country}"
+  rm -f "/tmp/rc.firewall.blacklist_geo6_${country}"
+ done
 
 fi

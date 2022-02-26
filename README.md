@@ -8,6 +8,7 @@ Automated FreeBSD IPFW2 (up to 20x WAN, up to 20x LAN, NAT, QoS, traffic shaping
 - Host, protocol and port based
 - Failover / Load balancing of multiple WANs
 - IP blacklist (IPv4 and IPv6) integrated
+- Geo IP blacklist (IPv4 and IPv6) integrated - feel free to block RU+BY traffic
 - Traffic stats counting (for Munin, Zabbix, Nagios, etc. monitoring)
 
 Install
@@ -17,9 +18,9 @@ Install
 
 Requirements
 ---
-- `bash` - for Github updates (firewall scripts runs with regular `sh` shell)
+- `bash` - for Github and Geo IP updates (firewall scripts runs with regular `sh` shell)
 - `git`
-- FreeBSD IPFW2 (incl. NAT)
+- FreeBSD IPFW2 (incl. NAT and dummynet)
 - FreeBSD 11.0+
 - use [tweaks](tweaks) to set and tune network subsystem
 
