@@ -50,7 +50,7 @@ IPFW_iip1_6="2fff:1fff:10:1ff0::254"
 #########################
 # https://www.ipdeny.com/ipblocks/data/aggregated
 # https://www.ipdeny.com/ipv6/ipaddresses/aggregated
-IPFW_geo="ru by cu"     # block traffic from Belarus, Russia and Cuba
+IPFW_geo_block="ru by cu"     # block traffic from Belarus, Russia and Cuba
 
 
 
@@ -712,5 +712,18 @@ ${fwcmd} -q table WAN2 add 192.168.0.3/32
 #BLOCK_TABLESRC_6="CAMS6 SWITCHES6"
 #BLOCK_TABLEDST=""
 #BLOCK_TABLEDST_6=""
+
+
+#########################
+# Update Geo IP blocks
+#########################
+ for country in ${IPFW_geo_block}; do
+  fetch "https://www.ipdeny.com/ipblocks/data/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo_${country}"
+ done
+ echo "" > "/etc/rc.firewall.blacklist_geo"
+ for country in ${IPFW_geo_block}; do
+  cat "/tmp/rc.firewall.blacklist_geo_${country}" >> "/etc/rc.firewall.blacklist_geo"
+  rm -f "/tmp/rc.firewall.blacklist_geo_${country}"
+ done
 
 fi
