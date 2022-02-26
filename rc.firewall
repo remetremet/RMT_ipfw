@@ -623,6 +623,7 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
  ${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST6\) to any
  ${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST_RMT6\) to any
  ${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST_IMP6\) to any
+ ${fwcmd} add ${IPFW_deny} ip6 from table\(BLACKLIST_GEO6\) to any
  ${fwcmd} add ${IPFW_denylog} ip6 from table\(BLOCKED_RANGES6\) to any
 # blocked WAN IN dstports (logging enabled)
  block_dstports "in6log" "${IPFW_wan6_in_dstports}"
@@ -687,6 +688,7 @@ if [ "${IPFW_WAN_6}" == "1" ]; then
  ${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST6\)
  ${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST_RMT6\)
  ${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST_IMP6\)
+ ${fwcmd} add ${IPFW_deny} ip6 from any to table\(BLACKLIST_GEO6\)
  ${fwcmd} add ${IPFW_denylog} ip6 from any to table\(BLOCKED_RANGES6\)
 # blocked WAN OUT dstports (logging enabled)
  block_dstports "out6log" "${IPFW_wan6_out_dstports}"
@@ -758,6 +760,7 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
  ${fwcmd} add 41000 ${IPFW_deny} ip4 from table\(BLACKLIST\) to any
  ${fwcmd} add ${IPFW_deny} ip4 from table\(BLACKLIST_RMT\) to any
  ${fwcmd} add ${IPFW_deny} ip4 from table\(BLACKLIST_IMP\) to any
+ ${fwcmd} add ${IPFW_deny} ip4 from table\(BLACKLIST_GEO\) to any
  ${fwcmd} add ${IPFW_deny} igmp from any to any
  ${fwcmd} add ${IPFW_denylog} ip4 from table\(BLOCKED_RANGES\) to any
 # blocked WAN IN dstports (logging enabled)
@@ -856,6 +859,7 @@ if [ "${IPFW_WAN_4}" == "1" ]; then
  ${fwcmd} add 46000 ${IPFW_deny} ip4 from any to table\(BLACKLIST\)
  ${fwcmd} add ${IPFW_deny} ip4 from any to table\(BLACKLIST_RMT\)
  ${fwcmd} add ${IPFW_deny} ip4 from any to table\(BLACKLIST_IMP\)
+ ${fwcmd} add ${IPFW_deny} ip4 from any to table\(BLACKLIST_GEO\)
  ${fwcmd} add ${IPFW_deny} igmp from any to any
  ${fwcmd} add ${IPFW_denylog} ip4 from any to table\(BLOCKED_RANGES\)
 # blocked WAN OUT dstports (logging enabled)
