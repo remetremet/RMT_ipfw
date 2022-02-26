@@ -721,8 +721,8 @@ ${fwcmd} -q table WAN2 add 192.168.0.3/32
   fetch "https://www.ipdeny.com/ipblocks/data/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo_${country}" > /dev/null 2> /dev/null
   fetch "https://www.ipdeny.com/ipv6/ipaddresses/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo6_${country}" > /dev/null 2> /dev/null
  done
- echo "" > "/etc/rc.firewall.blacklist_geo"
- echo "" > "/etc/rc.firewall.blacklist_geo6"
+ rm -f "/etc/rc.firewall.blacklist_geo"
+ rm -f "/etc/rc.firewall.blacklist_geo6"
  for country in ${IPFW_geo_block}; do
   cat "/tmp/rc.firewall.blacklist_geo_${country}" >> "/etc/rc.firewall.blacklist_geo"
   cat "/tmp/rc.firewall.blacklist_geo6_${country}" >> "/etc/rc.firewall.blacklist_geo6"
