@@ -386,6 +386,16 @@ prepare_tables (){
  ${fwcmd} -q table BLACKLIST_IMP6 flush > /dev/null 2> /dev/null
  touch /etc/rc.firewall.blacklist_imp6
  tail -n +2 /etc/rc.firewall.blacklist_imp6 | xargs ipfw -q table BLACKLIST_IMP6 add
+
+ ${fwcmd} -q table BLACKLIST_GEO create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLACKLIST_GEO flush > /dev/null 2> /dev/null
+ touch /etc/rc.firewall.blacklist_geo
+ tail -n +2 /etc/rc.firewall.blacklist_geo | xargs ipfw -q table BLACKLIST_GEO add
+
+ ${fwcmd} -q table BLACKLIST_GEO6 create > /dev/null 2> /dev/null
+ ${fwcmd} -q table BLACKLIST_GEO6 flush > /dev/null 2> /dev/null
+ touch /etc/rc.firewall.blacklist_geo6
+ tail -n +2 /etc/rc.firewall.blacklist_geo6 | xargs ipfw -q table BLACKLIST_GEO6 add
 }
 
 
