@@ -45,6 +45,15 @@ IPFW_inet1_6="2fff:1fff:10:1ff0::/64"
 IPFW_iip1_6="2fff:1fff:10:1ff0::254"
 
 
+#########################
+# Geo IP definitions
+#########################
+# https://www.ipdeny.com/ipblocks/data/aggregated
+# https://www.ipdeny.com/ipv6/ipaddresses/aggregated
+IPFW_geo="ru by cu"     # block traffic from Belarus, Russia and Cuba
+
+
+
 if [ "${XYZ}" != "info" ]; then
 ########################################
 # WAN input dstports blocked
