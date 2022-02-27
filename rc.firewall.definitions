@@ -355,8 +355,8 @@ prepare_shaping (){
 }
 
 
-# prepare_tables   ### no params ###
-prepare_tables (){
+# prepare_ipfw_tables   ### no params ###
+prepare_ipfw_tables (){
  ${fwcmd} -q table BLACKLIST create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST flush > /dev/null 2> /dev/null
  touch "/etc/rc.firewall.blacklist"
