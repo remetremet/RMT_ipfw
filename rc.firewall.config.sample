@@ -1,12 +1,12 @@
 #!/bin/sh
 ##############################
-# Rmt Firewall configuration #
+# RMT Firewall configuration #
 ##############################
 
 # Enable support of statefull firewall
-IPFW_statefull="0"
+#IPFW_statefull="0"
 # Enable support of multiple WANs (load balancing/failover)
-IPFW_multiwan="1"
+#IPFW_multiwan="1"
 
 ##########################
 # WAN definitions
@@ -673,12 +673,8 @@ for i in ${IPFW_LANS_list}; do
  fi
 done
 
-${fwcmd} -q table TRUSTED add 192.168.0.0/16
-${fwcmd} -q table TRUSTED add 172.17.3.0/24
-${fwcmd} -q table TRUSTED add 10.0.0.0/8
-
-${fwcmd} -q table TRUSTED6 add 2fff:1fff:10:1ff0::/64
-${fwcmd} -q table TRUSTED6 add 2fff:1fff:10:1fff::1234:5678/128
+#${fwcmd} -q table TRUSTED add 123.123.123.0/24
+#${fwcmd} -q table TRUSTED6 add 2fff:1fff:10:1ff0::/64
 
 for i in ${IPFW_WANS_list}; do
  j="IPFW_oip${i}"
@@ -688,46 +684,21 @@ for i in ${IPFW_WANS_list}; do
   ${fwcmd} -q table WAN${i} flush > /dev/null 2> /dev/null
  fi
 done
-${fwcmd} -q table WAN2 add 192.168.0.1/32
-${fwcmd} -q table WAN2 add 192.168.0.3/32
+#${fwcmd} -q table WAN1 add 192.168.0.1/32 0
+#${fwcmd} -q table WAN2 add 192.168.0.3/32 0
 
 
 #########################
 # Local/FIB tables (MultiWAN by tables or ports, optional)
 #########################
-#${fwcmd} -q table GUESTS create > /dev/null 2> /dev/null
-#${fwcmd} -q table GUESTS flush > /dev/null 2> /dev/null
+#${fwcmd} -q table GUESTS add 192.168.3.5/32 0
 ###
-#${fwcmd} -q table IOTS create > /dev/null 2> /dev/null
-#${fwcmd} -q table IOTS flush > /dev/null 2> /dev/null
-###
-#${fwcmd} -q table CAMS create > /dev/null 2> /dev/null
-#${fwcmd} -q table CAMS flush > /dev/null 2> /dev/null
-###
-#${fwcmd} -q table CAMS_6 create > /dev/null 2> /dev/null
-#${fwcmd} -q table CAMS_6 flush > /dev/null 2> /dev/null
+#${fwcmd} -q table IOTS add 192.168.2.46/32 0
 ###
 
 #BLOCK_TABLESRC="CAMS SWITCHES"
 #BLOCK_TABLESRC_6="CAMS6 SWITCHES6"
 #BLOCK_TABLEDST=""
 #BLOCK_TABLEDST_6=""
-
-
-#########################
-# Update Geo IP blocks
-#########################
- for country in ${IPFW_geo_block}; do
-  fetch "https://www.ipdeny.com/ipblocks/data/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo_${country}" > /dev/null 2> /dev/null
-  fetch "https://www.ipdeny.com/ipv6/ipaddresses/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo6_${country}" > /dev/null 2> /dev/null
- done
- rm -f "/etc/rc.firewall.blacklist_geo"
- rm -f "/etc/rc.firewall.blacklist_geo6"
- for country in ${IPFW_geo_block}; do
-  cat "/tmp/rc.firewall.blacklist_geo_${country}" >> "/etc/rc.firewall.blacklist_geo"
-  cat "/tmp/rc.firewall.blacklist_geo6_${country}" >> "/etc/rc.firewall.blacklist_geo6"
-  rm -f "/tmp/rc.firewall.blacklist_geo_${country}"
-  rm -f "/tmp/rc.firewall.blacklist_geo6_${country}"
- done
 
 fi
