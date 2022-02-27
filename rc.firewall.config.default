@@ -448,6 +448,44 @@ PROTOACTION="${PROTOACTION} allow"
 
 
 ###########################
+# Global (mandatory) tables
+###########################
+# Blocked ranges on WAN interfaces
+###########################
+#${fwcmd} -q table BLOCKED_RANGES add 192.168.0.0/16
+#${fwcmd} -q table BLOCKED_RANGES add 172.16.0.0/12
+#${fwcmd} -q table BLOCKED_RANGES add 10.0.0.0/8
+#if [ x"$ipv6_available" == x"0" ]; then
+# ${fwcmd} -q table BLOCKED_RANGES6 add fe80::/10
+# ${fwcmd} -q table BLOCKED_RANGES6 add fec0::/10
+# ${fwcmd} -q table BLOCKED_RANGES6 add ff02::/16
+# ${fwcmd} -q table BLOCKED_RANGES6 add ff03::/16
+# ${fwcmd} -q table BLOCKED_RANGES6 add ff05::/16
+#fi
+
+# Trusted ranges
+###########################
+${fwcmd} -q table TRUSTED add 192.168.0.0/16
+${fwcmd} -q table TRUSTED add 172.16.0.0/12
+${fwcmd} -q table TRUSTED add 10.0.0.0/8
+
+# Local/FIB tables (MultiWAN by tables or ports, optional)
+#########################
+${fwcmd} -q table GUESTS create > /dev/null 2> /dev/null
+${fwcmd} -q table GUESTS flush > /dev/null 2> /dev/null
+###
+${fwcmd} -q table IOTS create > /dev/null 2> /dev/null
+${fwcmd} -q table IOTS flush > /dev/null 2> /dev/null
+###
+
+BLOCK_TABLESRC=""
+BLOCK_TABLESRC_6=""
+BLOCK_TABLEDST=""
+BLOCK_TABLEDST_6=""
+
+
+
+###########################
 # Functions
 ###########################
 # prepare_ipfw_lists   ### no params ###
@@ -542,7 +580,6 @@ prepare_ipfw_lists (){
  done
 }
 
-
 # prepare_ipfw_ranges   ### no params ###
 prepare_ipfw_ranges (){
  # LAN allowed ranges
@@ -619,7 +656,6 @@ prepare_ipfw_ranges (){
    fi
   fi
  done
- 
  # WAN out allowed ranges
  for i in ${IPFW_WANS_list}; do
   j="IPFW_oip${i}"
@@ -666,40 +702,3 @@ prepare_ipfw_ranges (){
   fi
  done
 }
-
-
-###########################
-# Global (mandatory) tables
-###########################
-# Blocked ranges on WAN interfaces
-###########################
-#${fwcmd} -q table BLOCKED_RANGES add 192.168.0.0/16
-#${fwcmd} -q table BLOCKED_RANGES add 172.16.0.0/12
-#${fwcmd} -q table BLOCKED_RANGES add 10.0.0.0/8
-#if [ x"$ipv6_available" == x"0" ]; then
-# ${fwcmd} -q table BLOCKED_RANGES6 add fe80::/10
-# ${fwcmd} -q table BLOCKED_RANGES6 add fec0::/10
-# ${fwcmd} -q table BLOCKED_RANGES6 add ff02::/16
-# ${fwcmd} -q table BLOCKED_RANGES6 add ff03::/16
-# ${fwcmd} -q table BLOCKED_RANGES6 add ff05::/16
-#fi
-
-# Trusted ranges
-###########################
-${fwcmd} -q table TRUSTED add 192.168.0.0/16
-${fwcmd} -q table TRUSTED add 172.16.0.0/12
-${fwcmd} -q table TRUSTED add 10.0.0.0/8
-
-# Local/FIB tables (MultiWAN by tables or ports, optional)
-#########################
-${fwcmd} -q table GUESTS create > /dev/null 2> /dev/null
-${fwcmd} -q table GUESTS flush > /dev/null 2> /dev/null
-###
-${fwcmd} -q table IOTS create > /dev/null 2> /dev/null
-${fwcmd} -q table IOTS flush > /dev/null 2> /dev/null
-###
-
-BLOCK_TABLESRC=""
-BLOCK_TABLESRC_6=""
-BLOCK_TABLEDST=""
-BLOCK_TABLEDST_6=""
