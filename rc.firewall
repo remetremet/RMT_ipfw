@@ -54,6 +54,7 @@ fi
 prepare_ipfw_lists
 prepare_ipfw_ranges
 prepare_ipfw_tables
+prepare_ipfw_wans
 
 ########################
 ### Loopback
