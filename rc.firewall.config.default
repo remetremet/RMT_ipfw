@@ -1,0 +1,698 @@
+#!/bin/sh
+###########################################################################
+# RMT Firewall configuration defaults (to be overwritten by local config) #
+###########################################################################
+
+# Enable support of statefull firewall
+IPFW_statefull="0"
+# Enable support of multiple WANs (load balancing/failover)
+IPFW_multiwan="0"
+
+##########################
+# WAN definitions
+##########################
+IPFW_ofib1="0"
+IPFW_oif1="em0"
+IPFW_onet1="65.54.43.0/24"
+IPFW_oip1="65.54.43.32"
+IPFW_onet1_6="2fff:1fff:10:1fff::/64"
+IPFW_oip1_6="2fff:1fff:10:1fff::1234:5678"
+IPFW_nat1=""
+MWAN_TABLES1=""
+MWAN_PORTS1=""
+#
+IPFW_ofib2="1"
+IPFW_oif2="em1"
+IPFW_onet2="192.168.111.0/24"
+IPFW_oip2="192.168.111.111"
+IPFW_onet2_6=""
+IPFW_oip2_6=""
+IPFW_nat2=""
+MWAN_TABLES2=""
+MWAN_PORTS2=""
+
+
+#########################
+# LAN definitions
+#########################
+IPFW_iif1="igb2"
+IPFW_inet1="192.168.0.0/24"
+IPFW_iip1="192.168.0.254"
+IPFW_inet1_6="2fff:1fff:10:1ff0::/64"
+IPFW_iip1_6="2fff:1fff:10:1ff0::254"
+
+
+#########################
+# Geo IP definitions
+#########################
+# https://www.ipdeny.com/ipblocks/data/aggregated
+# https://www.ipdeny.com/ipv6/ipaddresses/aggregated
+IPFW_geo_block="ru by cu kp"     # block traffic from Belarus, Russia and Cuba
+
+
+########################################
+# WAN input dstports blocked
+########################################
+IPFW_wan4_in_dstports=""
+#IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 53 853 953" # DNS
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 67 68" # DHCP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 546 547" # DHCPv6
+#IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 520 521" # RIP, RIPng
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 25 465 587" # SMTP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 110 995" # POP3, POP3S
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 143 993" # IMAP, IMAPS
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 80" # HTTP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 443"   # HTTPS
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 3128"  # Squid
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5678"  # Mikrotik discovery
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5222"  # Apple
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5223"  # Teamspeak
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5228"  # Viber
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 20 21 990" # FTP, FTPS
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 22"    # SSH
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 515 631 9100" # Printer
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 161 162 987" # SNMP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 135"   # RPC
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 137 138 139 445" # Samba
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 389 636" # LDAP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1194"  # OpenVPN
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1723"  # PPTP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1701 500 4500" # L2TP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 8291 8292" # Mikrotik WinBox
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 635 548 944 860 3260 973" # NFS/AFS/iSCSI
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 514"   # Syslog
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 902 903 904 8200" # VMware
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 3493"  # NUT
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 3544"  # Teredo
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 808"   # CCproxy
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 4021 4025" # DSC Alarm
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 6851 6861" # TOR-like net
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1812 1813" # RADIUS
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 2082 2083" # cPanel
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5666 5667" # Nagios
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5000"  # Synology Management
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 2195 2196" # Apple Push
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 11211" # memcached
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 32400" # Plex
+#IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 10050 10051 10052" # Zabbix
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 3306"  # MySQL, MariaDB
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1433 1434"  # MS SQL
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5432"  # PG SQL
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1521"  # Oracle
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 8086"  # InfluxDB
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 523"   #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1526"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 4333"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 7210"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 2483 2484" #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 2638"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 3050"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 27017" #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 3389"  # RDP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5900 5901" # VNC
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5938"  # TeamViewer
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 3283"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5631"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5632"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 7070"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5190"  # Google Play
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5050"  # Apple Messenger
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5060 5061" # SIP
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 8767"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 4244"  #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5242 5243" # Viber
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 23399" #
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5353"  # mDNS
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5355"  # LLMNR
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1883 8883" # MQTT
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 8333" # Bitcoin
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 30303" # Ethereum
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 9000"
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 8181" # Dlink vulnerable
+IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 19 23 26 37 69 70 79 102 111 135 179 222 502 513 623 666 992 32764" # Others
+IPFW_wan6_in_dstports="${IPFW_wan4_in_dstports}"
+
+########################################
+# WAN OUT dstport blocked
+########################################
+IPFW_wan4_out_dstports=""
+IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 69"    # TFTP
+IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 70"    # Gopher
+IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 67 68" # DHCP
+IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 546 547" # DHCPv6
+#IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 520 521" # RIP, RIPng
+IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 135"   # RPC
+#IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 137 138 139 445" # Samba
+IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 5353"  # mDNS
+IPFW_wan6_out_dstports="${IPFW_wan4_out_dstports}"
+
+########################################
+# WAN OUT dstport allowed
+########################################
+IPFW_wan4_out_allowed_udp=""
+#IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 67 68" # DHCP
+#IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 546 547" # DHCPv6
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 53 853 953" # DNS
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 113"   # Ident
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 123"   # NTP
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 161 162" # SNMP
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 443"   # Google SPDY
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 554"   # RTSP
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 1194"  # OpenVPN
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 1723"  # PPTP
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 500 4500 1701" # L2TP/IPSec
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 4021"  # DSC Alarm
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 5001 5201" # iPerf
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 5004 33434" # Cisco Webex
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 5060 5061" # SIP/VoIP
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 40001-40046" # MS Windows Update
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 40126-40128" # Radiomed/Dicom
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 10001" # Ubiquiti Dicovery
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 3478 5514" # Ubiquiti Remote Site
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 17500" # Dropbox
+IPFW_wan4_out_allowed_udp="${IPFW_wan4_out_allowed_udp} 1900" # UPnP
+IPFW_wan6_out_allowed_udp="${IPFW_wan4_out_allowed_udp}"
+IPFW_wan4_out_allowed_tcp=""
+#IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 546 547" # DHCPv6
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 20 21 990" # FTP, FTPS
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 22 33322 48822" # SSH
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 23"    # Telnet
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 25 587 465" # SMTP
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 110 995" # POP3
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 143 993" # IMAPS
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 113"   # Ident
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 53 853 953" # DNS
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 80 443 81 8080 8443 8880 8843 33380 48880 48888" # WEB
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 137 138 139 445"   # Samba
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 554"   # RTSP
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 873 33873 874 875" # Rsync
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 1194"  # OpenVPN
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 1723"  # PPTP
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 500 4500 1701" # L2TP/IPSec
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 1688"  # MS Activation
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 1883 8883" # MQTT
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 3306 3307" # MySQL, MariaDB
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 5432"  # PgSQL
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 1433"  # MSSQL
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 8086"  # InfluxDB
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 3389 43389-43402" # RDP
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 3478"  # STUN
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 4244 5242"     # Viber
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 4949-4952"     # Munin
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 5001 5201" # iPerf
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 5004 33434" # Cisco Webex
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 5060 5061" # SIP/VoIP
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 5190"  # ICQ/Oscar
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 5222 5223 5228" # GooglePlay/Apple
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 4369 5672 5673 15672 25672" # RabbitMQ
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 5900 5901" # VNC
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 5938"  # TeamViewer
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 8291 8292" # Mikrotik WinBox
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 7275 7276"  # A-GPS
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 9443"  # Blynk
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 40001-40046" # MS Windows Update
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 40126-40128" # Radiomed/Dicom
+IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 10050 10051 10052" # Zabbix
+IPFW_wan6_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp}"
+
+########################################
+# WAN OUT dst protocols allowed
+########################################
+IPFW_wan4_out_allowed_proto=""
+IPFW_wan4_out_allowed_proto="${IPFW_wan4_out_allowed_proto} gre"    # GRE / PPTP
+IPFW_wan4_out_allowed_proto="${IPFW_wan4_out_allowed_proto} l2tp"   # L2TP
+IPFW_wan4_out_allowed_proto="${IPFW_wan4_out_allowed_proto} esp ah" # IPSec
+IPFW_wan6_out_allowed_proto=""
+
+###################################
+# WAN IN services allowed
+###################################
+PROTOPORT=""; # port numbers (53) (80,443) (110 143) (NONE)
+PROTOCOL=""; # protocol (TCP, UDP, ALL)
+PROTOLOG=""; # to log or not to log (0/1)
+PROTOIP4=""; # applies to this IP table (NONE/any/LOCALHOST/TRUSTED/<table name>)
+PROTOIP6=""; # applies to this IP table (NONE/any/LOCALHOST6/TRUSTED6/<table name>)
+PROTOACTION=""; # action (allow/deny)
+# DHCP
+IPFW_DHCP="1" # this machine is using DHCP in any role?
+#PROTOPORT="${PROTOPORT} 67,68"
+#PROTOCOL="${PROTOCOL} UDP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} NONE"
+#PROTOACTION="${PROTOACTION} deny"
+#PROTOPORT="${PROTOPORT} 546,547"
+#PROTOCOL="${PROTOCOL} UDP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} NONE"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+## DNS
+#PROTOPORT="${PROTOPORT} 53"
+#PROTOCOL="${PROTOCOL} ALL"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+#PROTOACTION="${PROTOACTION} deny"
+#PROTOPORT="${PROTOPORT} 853,953"
+#PROTOCOL="${PROTOCOL} ALL"
+#PROTOLOG="${PROTOLOG} 1"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+#PROTOACTION="${PROTOACTION} deny"
+#PROTOPORT="${PROTOPORT} 5353,5355"
+#PROTOCOL="${PROTOCOL} UDP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+## NTP
+#PROTOPORT="${PROTOPORT} 123"
+#PROTOCOL="${PROTOCOL} UDP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+# IDENT
+PROTOPORT="${PROTOPORT} 113"
+PROTOCOL="${PROTOCOL} ALL"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} TRUSTED"
+PROTOIP6="${PROTOIP6} TRUSTED6"
+PROTOACTION="${PROTOACTION} allow"
+# SSH
+PROTOPORT="${PROTOPORT} 33322,48822"
+PROTOCOL="${PROTOCOL} TCP"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} TRUSTED"
+PROTOIP6="${PROTOIP6} TRUSTED6"
+PROTOACTION="${PROTOACTION} allow"
+## TELNET
+#PROTOPORT="${PROTOPORT} 23"
+#PROTOCOL="${PROTOCOL} TCP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+## SMTP
+#PROTOPORT="${PROTOPORT} 25,465,587"
+#PROTOCOL="${PROTOCOL} TCP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+## POP3, POP3S
+#PROTOPORT="${PROTOPORT} 110,995"
+#PROTOCOL="${PROTOCOL} TCP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+## IMAP, IMAPS
+#PROTOPORT="${PROTOPORT} 143,993"
+#PROTOCOL="${PROTOCOL} TCP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+# WEB
+PROTOPORT="${PROTOPORT} 48880,48888,9090,8080"
+PROTOCOL="${PROTOCOL} TCP"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} any"
+PROTOIP6="${PROTOIP6} any"
+PROTOACTION="${PROTOACTION} allow"
+#PROTOPORT="${PROTOPORT} 443"
+#PROTOCOL="${PROTOCOL} ALL"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+## MySQL
+#PROTOPORT="${PROTOPORT} 3306,3307"
+#PROTOCOL="${PROTOCOL} TCP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+#PROTOACTION="${PROTOACTION} deny"
+## FTP
+#PROTOPORT="${PROTOPORT} 20,21"
+#PROTOCOL="${PROTOCOL} ALL"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+#PROTOACTION="${PROTOACTION} allow"
+## TFTP
+#PROTOPORT="${PROTOPORT} 69"
+#PROTOCOL="${PROTOCOL} UDP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+## SNMP
+#PROTOPORT="${PROTOPORT} 161"
+#PROTOCOL="${PROTOCOL} UDP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+#PROTOACTION="${PROTOACTION} deny"
+# RSYNC
+PROTOPORT="${PROTOPORT} 873"
+PROTOCOL="${PROTOCOL} TCP"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} TRUSTED"
+PROTOIP6="${PROTOIP6} TRUSTED6"
+PROTOACTION="${PROTOACTION} allow"
+# VPN
+PROTOPORT="${PROTOPORT} 41194"
+PROTOCOL="${PROTOCOL} ALL"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} any"
+PROTOIP6="${PROTOIP6} NONE"
+PROTOACTION="${PROTOACTION} allow"
+# RDP
+PROTOPORT="${PROTOPORT} 43389-43402"
+PROTOCOL="${PROTOCOL} TCP"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} any"
+PROTOIP6="${PROTOIP6} any"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+PROTOACTION="${PROTOACTION} allow"
+# ZABBIX
+PROTOPORT="${PROTOPORT} 10050,10051,10052"
+PROTOCOL="${PROTOCOL} TCP"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} TRUSTED"
+PROTOIP6="${PROTOIP6} TRUSTED6"
+PROTOACTION="${PROTOACTION} allow"
+## SAMBA
+#PROTOPORT="${PROTOPORT} 137,138,139,445"
+#PROTOCOL="${PROTOCOL} ALL"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+#PROTOACTION="${PROTOACTION} allow"
+## NUT
+#PROTOPORT="${PROTOPORT} 3493"
+#PROTOCOL="${PROTOCOL} TCP"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} allow"
+## SIP
+#PROTOPORT="${PROTOPORT} 5060,5061"
+#PROTOCOL="${PROTOCOL} ALL"
+#PROTOLOG="${PROTOLOG} 0"
+#PROTOIP4="${PROTOIP4} any"
+#PROTOIP6="${PROTOIP6} any"
+#PROTOACTION="${PROTOACTION} deny"
+## MQTT
+#PROTOPORT="${PROTOPORT} 1883,8883"
+#PROTOCOL="${PROTOCOL} TCP"
+#PROTOLOG="${PROTOLOG} 1"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+#PROTOACTION="${PROTOACTION} allow"
+## RabbitMQ
+#PROTOPORT="${PROTOPORT} 4369,5672,5673,15672"
+#PROTOCOL="${PROTOCOL} TCP"
+#PROTOLOG="${PROTOLOG} 1"
+#PROTOIP4="${PROTOIP4} TRUSTED"
+#PROTOIP6="${PROTOIP6} TRUSTED6"
+#PROTOACTION="${PROTOACTION} allow"
+# UNIFI (Remote sites)
+PROTOPORT="${PROTOPORT} 6789,8443,8880,8843"
+PROTOCOL="${PROTOCOL} TCP"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} TRUSTED"
+PROTOIP6="${PROTOIP6} TRUSTED6"
+PROTOACTION="${PROTOACTION} allow"
+PROTOPORT="${PROTOPORT} 3478,5514"
+PROTOCOL="${PROTOCOL} UDP"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} TRUSTED"
+PROTOIP6="${PROTOIP6} TRUSTED6"
+PROTOACTION="${PROTOACTION} allow"
+# iPerf
+PROTOPORT="${PROTOPORT} 5001,5201"
+PROTOCOL="${PROTOCOL} TCP"
+PROTOLOG="${PROTOLOG} 0"
+PROTOIP4="${PROTOIP4} TRUSTED"
+PROTOIP6="${PROTOIP6} TRUSTED6"
+PROTOACTION="${PROTOACTION} allow"
+
+
+
+fi
+#########################
+#########################
+#########################
+IPFW_WANS=0;
+IPFW_WANS6=0;
+for i in $(seq 1 1 20); do
+ j="IPFW_oip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_WANS=$(( ${IPFW_WANS} + 1 )) 
+ fi
+ j="IPFW_oip${i}_6"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_WANS6=$(( ${IPFW_WANS6} + 1 )) 
+ fi
+done
+if [ ! x"${IPFW_WANS}" == x"0" ]; then
+ IPFW_WANS_list=$(seq 1 1 ${IPFW_WANS})
+else
+ IPFW_WANS_list=""
+fi
+if [ ! x"${IPFW_WANS6}" == x"0" ]; then
+ IPFW_WANS6_list=$(seq 1 1 ${IPFW_WANS6})
+else
+ IPFW_WANS6_list=""
+fi
+IPFW_LANS=0;
+IPFW_LANS6=0;
+for i in $(seq 1 1 20); do
+ j="IPFW_iip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_LANS=$(( ${IPFW_LANS} + 1 )) 
+ fi
+ j="IPFW_iip${i}_6"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_LANS6=$(( ${IPFW_LANS6} + 1 )) 
+ fi
+done
+if [ ! x"${IPFW_LANS}" == x"0" ]; then
+ IPFW_LANS_list=$(seq 1 1 ${IPFW_LANS})
+else
+ IPFW_LANS_list=""
+fi
+if [ ! x"${IPFW_LANS6}" == x"0" ]; then
+ IPFW_LANS6_list=$(seq 1 1 ${IPFW_LANS6})
+else
+ IPFW_LANS6_list=""
+fi
+IPFW_WAN_6=""
+IPFW_WAN_4=""
+for i in ${IPFW_WANS_list}; do
+ j="IPFW_oip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_WAN_4="1"
+ fi
+done
+for i in ${IPFW_WANS6_list}; do
+ j="IPFW_oip${i}_6"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_WAN_6="1"
+ fi
+done
+IPFW_LAN_6=""
+IPFW_LAN_4=""
+for i in ${IPFW_LANS_list}; do
+ j="IPFW_iip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_LAN_4="1"
+ fi
+done
+for i in ${IPFW_LANS6_list}; do
+ j="IPFW_iip${i}_6"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  IPFW_LAN_6="1"
+ fi
+done
+
+if [ "${XYZ}" != "info" ]; then
+fwcmd="${fwcmd:-/sbin/ipfw}"
+###########################
+# Global (mandatory) tables
+###########################
+
+# Blocked ranges on WAN interfaces
+#${fwcmd} -q table BLOCKED_RANGES add 192.168.0.0/16
+#${fwcmd} -q table BLOCKED_RANGES add 172.16.0.0/12
+#${fwcmd} -q table BLOCKED_RANGES add 10.0.0.0/8
+#if [ x"$ipv6_available" == x"0" ]; then
+# ${fwcmd} -q table BLOCKED_RANGES6 add fe80::/10
+# ${fwcmd} -q table BLOCKED_RANGES6 add fec0::/10
+# ${fwcmd} -q table BLOCKED_RANGES6 add ff02::/16
+# ${fwcmd} -q table BLOCKED_RANGES6 add ff03::/16
+# ${fwcmd} -q table BLOCKED_RANGES6 add ff05::/16
+#fi
+
+# LAN allowed ranges
+for i in ${IPFW_LANS_list}; do
+ j="IPFW_iip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table LOCAL_RANGES add ${j}/32
+ fi
+ j="IPFW_inet${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table LOCAL_RANGES add ${j}
+ fi
+ if [ x"$ipv6_available" == x"0" ]; then
+  j="IPFW_iip${i}_6"
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
+   ${fwcmd} -q table LOCAL_RANGES6 add ${j}/128
+  fi
+  j="IPFW_inet${i}_6"
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
+   ${fwcmd} -q table LOCAL_RANGES6 add ${j}
+  fi
+ fi
+done
+# WAN out allowed ranges
+for i in ${IPFW_LANS_list}; do
+ j="IPFW_iip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table OUT_RANGES add ${j}/32
+ fi
+ j="IPFW_inet${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table OUT_RANGES add ${j}
+ fi
+ if [ x"$ipv6_available" == x"0" ]; then
+  j="IPFW_iip${i}_6"
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
+   ${fwcmd} -q table OUT_RANGES6 add ${j}/128
+  fi
+  j="IPFW_inet${i}_6"
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
+   ${fwcmd} -q table OUT_RANGES6 add ${j}
+  fi
+ fi
+done
+for i in ${IPFW_WANS_list}; do
+ j="IPFW_oip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table OUT_RANGES add ${j}/32
+ fi
+ j="IPFW_onet${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table OUT_RANGES add ${j}
+ fi
+ if [ x"$ipv6_available" == x"0" ]; then
+  j="IPFW_oip${i}_6"
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
+   ${fwcmd} -q table OUT_RANGES6 add ${j}/128
+  fi
+  j="IPFW_onet${i}_6"
+  eval j="\$${j}"
+  if [ -n "${j}" ]; then
+   ${fwcmd} -q table OUT_RANGES6 add ${j}
+  fi
+ fi
+done
+
+# WAN out allowed ranges
+for i in ${IPFW_WANS_list}; do
+ j="IPFW_oip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table OUT_WAN${i} create > /dev/null 2> /dev/null
+  ${fwcmd} -q table OUT_WAN${i} flush
+  ${fwcmd} -q table OUT_WAN${i} add ${j}/32
+  j="IPFW_onet${i}"
+  eval j="\$${j}"
+  ${fwcmd} -q table OUT_WAN${i} add ${j}
+ fi
+ j="IPFW_oip${i}_6"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table OUT_WAN${i}_6 create > /dev/null 2> /dev/null
+  ${fwcmd} -q table OUT_WAN${i}_6 flush
+  ${fwcmd} -q table OUT_WAN${i}_6 add ${j}/32
+  j="IPFW_onet${i}_6"
+  eval j="\$${j}"
+  ${fwcmd} -q table OUT_WAN${i}_6 add ${j}
+ fi
+done
+for i in ${IPFW_LANS_list}; do
+ j="IPFW_iip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table OUT_LAN${i} create > /dev/null 2> /dev/null
+  ${fwcmd} -q table OUT_LAN${i} flush
+  ${fwcmd} -q table OUT_LAN${i} add ${j}/32
+  j="IPFW_inet${i}"
+  eval j="\$${j}"
+  ${fwcmd} -q table OUT_LAN${i} add ${j}
+ fi
+ j="IPFW_iip${i}_6"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table OUT_LAN${i}_6 create > /dev/null 2> /dev/null
+  ${fwcmd} -q table OUT_LAN${i}_6 flush
+  ${fwcmd} -q table OUT_LAN${i}_6 add ${j}/32
+  j="IPFW_inet${i}_6"
+  eval j="\$${j}"
+  ${fwcmd} -q table OUT_LAN${i}_6 add ${j}
+ fi
+done
+
+${fwcmd} -q table TRUSTED add 192.168.0.0/16
+${fwcmd} -q table TRUSTED add 172.17.3.0/24
+${fwcmd} -q table TRUSTED add 10.0.0.0/8
+
+for i in ${IPFW_WANS_list}; do
+ j="IPFW_oip${i}"
+ eval j="\$${j}"
+ if [ -n "${j}" ]; then
+  ${fwcmd} -q table WAN${i} create > /dev/null 2> /dev/null
+  ${fwcmd} -q table WAN${i} flush > /dev/null 2> /dev/null
+ fi
+done
+
+
+#########################
+# Local/FIB tables (MultiWAN by tables or ports, optional)
+#########################
+${fwcmd} -q table GUESTS create > /dev/null 2> /dev/null
+${fwcmd} -q table GUESTS flush > /dev/null 2> /dev/null
+###
+${fwcmd} -q table IOTS create > /dev/null 2> /dev/null
+${fwcmd} -q table IOTS flush > /dev/null 2> /dev/null
+###
+BLOCK_TABLESRC=""
+BLOCK_TABLESRC_6=""
+BLOCK_TABLEDST=""
+BLOCK_TABLEDST_6=""
+
