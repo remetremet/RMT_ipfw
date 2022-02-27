@@ -359,43 +359,59 @@ prepare_shaping (){
 prepare_tables (){
  ${fwcmd} -q table BLACKLIST create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST flush > /dev/null 2> /dev/null
- touch /etc/rc.firewall.blacklist
- tail -n +2 /etc/rc.firewall.blacklist | xargs ipfw -q table BLACKLIST add
+ touch "/etc/rc.firewall.blacklist"
+ tail -n +2 "/etc/rc.firewall.blacklist" | xargs ipfw -q table BLACKLIST add
 
  ${fwcmd} -q table BLACKLIST6 create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST6 flush > /dev/null 2> /dev/null
- touch /etc/rc.firewall.blacklist6
- tail -n +2 /etc/rc.firewall.blacklist6 | xargs ipfw -q table BLACKLIST6 add
+ touch "/etc/rc.firewall.blacklist6"
+ tail -n +2 "/etc/rc.firewall.blacklist6" | xargs ipfw -q table BLACKLIST6 add
 
  ${fwcmd} -q table BLACKLIST_RMT create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_RMT flush > /dev/null 2> /dev/null
- touch /etc/rc.firewall.blacklist_rmt
- tail -n +2 /etc/rc.firewall.blacklist_rmt | xargs ipfw -q table BLACKLIST_RMT add
+ touch "/etc/rc.firewall.blacklist_rmt"
+ tail -n +2 "/etc/rc.firewall.blacklist_rmt" | xargs ipfw -q table BLACKLIST_RMT add
 
  ${fwcmd} -q table BLACKLIST_RMT6 create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_RMT6 flush > /dev/null 2> /dev/null
- touch /etc/rc.firewall.blacklist_rmt6
- tail -n +2 /etc/rc.firewall.blacklist_rmt6 | xargs ipfw -q table BLACKLIST_RMT6 add
+ touch "/etc/rc.firewall.blacklist_rmt6"
+ tail -n +2 "/etc/rc.firewall.blacklist_rmt6" | xargs ipfw -q table BLACKLIST_RMT6 add
 
  ${fwcmd} -q table BLACKLIST_IMP create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_IMP flush > /dev/null 2> /dev/null
- touch /etc/rc.firewall.blacklist_imp
- tail -n +2 /etc/rc.firewall.blacklist_imp | xargs ipfw -q table BLACKLIST_IMP add
+ touch "/etc/rc.firewall.blacklist_imp"
+ tail -n +2 "/etc/rc.firewall.blacklist_imp" | xargs ipfw -q table BLACKLIST_IMP add
 
  ${fwcmd} -q table BLACKLIST_IMP6 create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_IMP6 flush > /dev/null 2> /dev/null
- touch /etc/rc.firewall.blacklist_imp6
- tail -n +2 /etc/rc.firewall.blacklist_imp6 | xargs ipfw -q table BLACKLIST_IMP6 add
+ touch "/etc/rc.firewall.blacklist_imp6"
+ tail -n +2 "/etc/rc.firewall.blacklist_imp6" | xargs ipfw -q table BLACKLIST_IMP6 add
+
+ IPFW_geo_block="${IPFW_geo_block:-}"
+ for country in ${IPFW_geo_block}; do
+  fetch "https://www.ipdeny.com/ipblocks/data/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo_${country}" > /dev/null 2> /dev/null
+  fetch "https://www.ipdeny.com/ipv6/ipaddresses/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo6_${country}" > /dev/null 2> /dev/null
+ done
+ touch "/etc/rc.firewall.blacklist_geo"
+ rm -f "/etc/rc.firewall.blacklist_geo" > /dev/null 2> /dev/null
+ touch "/etc/rc.firewall.blacklist_geo6"
+ rm -f "/etc/rc.firewall.blacklist_geo6" > /dev/null 2> /dev/null
+ for country in ${IPFW_geo_block}; do
+  cat "/tmp/rc.firewall.blacklist_geo_${country}" >> "/etc/rc.firewall.blacklist_geo"
+  rm -f "/tmp/rc.firewall.blacklist_geo_${country}" > /dev/null 2> /dev/null
+  cat "/tmp/rc.firewall.blacklist_geo6_${country}" >> "/etc/rc.firewall.blacklist_geo6"
+  rm -f "/tmp/rc.firewall.blacklist_geo6_${country}" > /dev/null 2> /dev/null
+ done
 
  ${fwcmd} -q table BLACKLIST_GEO create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_GEO flush > /dev/null 2> /dev/null
- touch /etc/rc.firewall.blacklist_geo
- tail -n +2 /etc/rc.firewall.blacklist_geo | xargs -I % ipfw -q table BLACKLIST_GEO add % 0
+ touch "/etc/rc.firewall.blacklist_geo"
+ tail -n +2 "/etc/rc.firewall.blacklist_geo" | sed 's/$/ 0/' | xargs ipfw -q table BLACKLIST_GEO add
 
  ${fwcmd} -q table BLACKLIST_GEO6 create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLACKLIST_GEO6 flush > /dev/null 2> /dev/null
- touch /etc/rc.firewall.blacklist_geo6
- tail -n +2 /etc/rc.firewall.blacklist_geo6 | xargs -I % ipfw -q table BLACKLIST_GEO6 add % 0
+ touch "/etc/rc.firewall.blacklist_geo6"
+ tail -n +2 "/etc/rc.firewall.blacklist_geo6" | sed 's/$/ 0/' | xargs ipfw -q table BLACKLIST_GEO6 add
 }
 
 
