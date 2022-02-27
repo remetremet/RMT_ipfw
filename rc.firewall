@@ -24,6 +24,7 @@ fi
 afexists inet6
 ipv6_available=$?
 . /etc/rc.firewall.definitions
+. /etc/rc.firewall.config.default
 . /etc/rc.firewall.config
 if [ x"${IPFW_LANS6}" == x"" ]; then
  IPFW_LANS6=${IPFW_LANS}
@@ -50,7 +51,7 @@ if [ ${IPFW_multiwan} -eq 1 ]; then
   fi
  done
 fi
-prepare_tables
+prepare_ipfw_tables
 
 ########################
 ### Loopback
