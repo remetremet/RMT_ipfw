@@ -51,6 +51,8 @@ if [ ${IPFW_multiwan} -eq 1 ]; then
   fi
  done
 fi
+prepare_ipfw_lists
+prepare_ipfw_ranges
 prepare_ipfw_tables
 
 ########################
