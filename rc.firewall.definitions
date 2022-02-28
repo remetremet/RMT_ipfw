@@ -1,8 +1,11 @@
 #!/bin/sh
 
-fwcmd="/sbin/ipfw"
+# IPFW CLI path
+###########################
+fwcmd="${fwcmd:-/sbin/ipfw}"
 
-# definitions
+# Macro definitions
+###########################
 IPFW_unprivports="1024-65535"
 IPFW_privports="1-1023"
 IPFW_logamount="logamount 0"
@@ -13,9 +16,6 @@ IPFW_allowlog="allow log ${IPFW_logamount}"
 IPFW_keep="keep-state"
 IPFW_keepsetup="keep-state setup"
 
-# defauls (to be overriden in config)
-IPFW_statefull="0"
-IPFW_multiwan="0"
 
 ###########################
 # Global (mandatory) tables
@@ -32,6 +32,11 @@ ${fwcmd} -q table PRIVATE flush > /dev/null 2> /dev/null
 ${fwcmd} -q table PRIVATE add 192.168.0.0/16 0
 ${fwcmd} -q table PRIVATE add 10.0.0.0/8 0
 ${fwcmd} -q table PRIVATE add 172.16.0.0/12 0
+###
+${fwcmd} -q table PRIVATE6 create > /dev/null 2> /dev/null
+${fwcmd} -q table PRIVATE6 flush > /dev/null 2> /dev/null
+${fwcmd} -q table PRIVATE6 add fc00::/7 0
+${fwcmd} -q table PRIVATE6 add fe80::/10 0
 ###
 ${fwcmd} -q table BLOCKED_RANGES create > /dev/null 2> /dev/null
 ${fwcmd} -q table BLOCKED_RANGES flush > /dev/null 2> /dev/null
@@ -50,12 +55,13 @@ ${fwcmd} -q table BLOCKED_RANGES add 240.0.0.0/4
 if [ x"$ipv6_available" == x"0" ]; then
  ${fwcmd} -q table BLOCKED_RANGES6 create > /dev/null 2> /dev/null
  ${fwcmd} -q table BLOCKED_RANGES6 flush > /dev/null 2> /dev/null
- ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:ac10::/44
- ${fwcmd} -q table BLOCKED_RANGES6 add 2001::/40
- ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:a9fe::/48
- ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:c000:200::/56
- ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:e000::/56
- ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:f000::/36
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:db8::/32 0
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:ac10::/44 0
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001::/40 0
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:a9fe::/48 0
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:c000:200::/56 0
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:e000::/56 0
+ ${fwcmd} -q table BLOCKED_RANGES6 add 2001:0:f000::/36 0
 fi
 ###
 ${fwcmd} -q table LOCAL_RANGES create > /dev/null 2> /dev/null
@@ -81,6 +87,8 @@ ${fwcmd} -q table TRUSTED6 create > /dev/null 2> /dev/null
 ${fwcmd} -q table TRUSTED6 flush > /dev/null 2> /dev/null
 ###
 
+# Common known outgoing TCP/UDP ports
+##########################
 IPFW_known_ports=""
 IPFW_known_ports="${IPFW_known_ports} 20 21 22 23 25 53 67 68 69 80 81 88 110 111 113 123 135 137 138 139 143 161"
 IPFW_known_ports="${IPFW_known_ports} 443 445 465 521 546 547 554 587 777 853 873 953 990 993 995"
@@ -467,4 +475,3 @@ array_groupby() {
  fi
  echo "${output}"
 }
-
