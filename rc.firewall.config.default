@@ -10,7 +10,6 @@ IPFW_multiwan="0"
 # IPFW CLI path
 fwcmd="${fwcmd:-/sbin/ipfw}"
 
-
 ##########################
 # WAN definitions
 ##########################
@@ -34,7 +33,6 @@ IPFW_nat2=""
 MWAN_TABLES2=""
 MWAN_PORTS2=""
 
-
 #########################
 # LAN definitions
 #########################
@@ -45,38 +43,21 @@ IPFW_inet1_6="2fff:1fff:10:1ff0::/64"
 IPFW_iip1_6="2fff:1fff:10:1ff0::254"
 
 
-#########################
 # Geo IP definitions
 #########################
 # https://www.ipdeny.com/ipblocks/data/aggregated
 # https://www.ipdeny.com/ipv6/ipaddresses/aggregated
-IPFW_geo_block="ru by cu kp kz"     # block traffic from Belarus, Russia, Kazakhstan, DPRK and Cuba
+IPFW_geo_block="ru by cu kp kz ir rs"     # block traffic from Belarus, Russia, Kazakhstan, DPRK, Iran, Serbia and Cuba
 
-
-########################################
 # WAN input dstports blocked
 ########################################
 IPFW_wan4_in_dstports=""
-#IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 53 853 953" # DNS
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 67 68" # DHCP
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 546 547" # DHCPv6
-#IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 520 521" # RIP, RIPng
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 25 465 587" # SMTP
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 110 995" # POP3, POP3S
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 143 993" # IMAP, IMAPS
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 80" # HTTP
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 443"   # HTTPS
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 3128"  # Squid
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5678"  # Mikrotik discovery
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5222"  # Apple
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5223"  # Teamspeak
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 5228"  # Viber
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 20 21 990" # FTP, FTPS
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 22"    # SSH
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 515 631 9100" # Printer
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 161 162 987" # SNMP
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 135"   # RPC
-IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 137 138 139 445" # Samba
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 389 636" # LDAP
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1194"  # OpenVPN
 IPFW_wan4_in_dstports="${IPFW_wan4_in_dstports} 1723"  # PPTP
@@ -149,7 +130,6 @@ IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 135"   # RPC
 IPFW_wan4_out_dstports="${IPFW_wan4_out_dstports} 5353"  # mDNS
 IPFW_wan6_out_dstports="${IPFW_wan4_out_dstports}"
 
-########################################
 # WAN OUT dstport allowed
 ########################################
 IPFW_wan4_out_allowed_udp=""
@@ -218,7 +198,6 @@ IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 40126-40128" # Radiomed/
 IPFW_wan4_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp} 10050 10051 10052" # Zabbix
 IPFW_wan6_out_allowed_tcp="${IPFW_wan4_out_allowed_tcp}"
 
-########################################
 # WAN OUT dst protocols allowed
 ########################################
 IPFW_wan4_out_allowed_proto=""
@@ -227,7 +206,6 @@ IPFW_wan4_out_allowed_proto="${IPFW_wan4_out_allowed_proto} l2tp"   # L2TP
 IPFW_wan4_out_allowed_proto="${IPFW_wan4_out_allowed_proto} esp ah" # IPSec
 IPFW_wan6_out_allowed_proto=""
 
-###################################
 # WAN IN services allowed
 ###################################
 PROTOPORT=""; # port numbers (53) (80,443) (110 143) (NONE)
