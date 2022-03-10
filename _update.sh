@@ -15,3 +15,5 @@ cp "${BASEPATH}/github/rc.firewall.definitions" /etc/
 chmod 755 /etc/rc.firewall.definitions
 cp "${BASEPATH}/github/rc.firewall.config.sample" /etc/
 chmod 755 /etc/rc.firewall.config.sample
+cp "${BASEPATH}/github/rc.firewall.config.default" /etc/
+chmod 755 /etc/rc.firewall.config.default
