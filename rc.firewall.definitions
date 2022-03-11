@@ -397,8 +397,8 @@ prepare_ipfw_tables (){
 
  IPFW_geo_block="${IPFW_geo_block:-}"
  for country in ${IPFW_geo_block}; do
-  fetch "https://www.ipdeny.com/ipblocks/data/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo_${country}" > /dev/null 2> /dev/null
-  fetch "https://www.ipdeny.com/ipv6/ipaddresses/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo6_${country}" > /dev/null 2> /dev/null
+  fetch --no-verify-peer "https://www.ipdeny.com/ipblocks/data/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo_${country}" > /dev/null 2> /dev/null
+  fetch --no-verify-peer "https://www.ipdeny.com/ipv6/ipaddresses/aggregated/${country}-aggregated.zone" -o "/tmp/rc.firewall.blacklist_geo6_${country}" > /dev/null 2> /dev/null
  done
  touch "/etc/rc.firewall.blacklist_geo"
  rm -f "/etc/rc.firewall.blacklist_geo" > /dev/null 2> /dev/null
